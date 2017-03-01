@@ -1,0 +1,11 @@
+app:
+    resource: "@AppBundle/Controller/"
+    type:     annotation
+
+jsonapi_user:
+    resource: AppBundle\Controller\UserController
+    type:     jsonapi_resource
+
+jsonapi_foo:
+    resource: AppBundle\Controller\FooController
+    type:     jsonapi_resource

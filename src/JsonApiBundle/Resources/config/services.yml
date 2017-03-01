@@ -1,0 +1,33 @@
+services:
+  jsonapi.routing_loader:
+    class: JsonApiBundle\Routing\ResourceRouteLoader
+    tags:
+      - { name: routing.loader }
+
+  jsonapi.resource_reader:
+    class: JsonApiBundle\JsonApiResource\ResourceReader
+    arguments:
+      - "AppBundle\\JsonApiResource"
+      - "AppBundle/JsonApiResource"
+      - "%kernel.root_dir%"
+      - "@annotation_reader"
+
+  jsonapi.entity_loader:
+    class: JsonApiBundle\JsonApiResource\EntityLoader
+    arguments: ["@doctrine.orm.entity_manager"]
+
+  jsonapi.resource_manager:
+    class: JsonApiBundle\JsonApiResource\ResourceManager
+    arguments:
+      - "@jsonapi.resource_reader"
+      - "@jsonapi.entity_loader"
+
+  jsonapi.formatter.default:
+    class: JsonApiBundle\JsonApiResource\Formatter
+    tags:
+      - { name: jsonapi.formatter }
+
+  jsonapi.formatter.datetime:
+    class: JsonApiBundle\JsonApiResource\DateFormatter
+    tags:
+      - { name: jsonapi.formatter }
