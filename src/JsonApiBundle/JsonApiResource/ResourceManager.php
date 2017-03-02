@@ -51,6 +51,15 @@ class ResourceManager
     }
 
     /**
+     * Get the entity loader
+     * @return EntityLoader Entity Loader
+     */
+    public function getEntityLoader()
+    {
+        return $this->entityLoader;
+    }
+
+    /**
      * Get a resource by name
      * @param  string $name Name of the resource to get
      * @return JsonApiResource Resource if exists
@@ -72,6 +81,9 @@ class ResourceManager
     {
         if (null === $this->resources) {
             $this->resources = $this->resourceReader->readResources($this->formatters);
+            foreach($this->resources as $resource) {
+                $resource->setManager($this);
+            }
         }
 
         return $this->resources;

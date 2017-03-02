@@ -31,6 +31,12 @@ class HasOne extends Annotation
     public $entity;
 
     /**
+     * Method to call on the entity to get the id
+     * @var string
+     */
+    public $getIdMethod = 'getId';
+
+    /**
      * Get the value of Resource of the many side of the relation
      * @return string
      */
@@ -55,5 +61,14 @@ class HasOne extends Annotation
     public function getEntity()
     {
         return $this->entity;
+    }
+
+    /**
+     * Get the getid method for the relationship
+     * @return string
+     */
+    public function getGetIdMethod()
+    {
+        return $this->getIdMethod;
     }
 }

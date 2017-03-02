@@ -56,6 +56,46 @@ class Attribute
     }
 
     /**
+     * Add the attribute value to the json outpu
+     * @param  mixed $entity Entity or entity collection
+     * @param  array $json   Hash for json output
+     * @return array         Altered json hash
+     */
+    public function addToJson($entity, array $json)
+    {
+        if (is_array($entity)) {
+            if (array_key_exists($this->getEntity(), $entity)) {
+                $json['attributes'][$this->getJsonName()] = $this->getFormatter()->toJson($entity[$this->getEntity()]->{'get' . $this->property}());
+            }
+        } else {
+            $json['attributes'][$this->getJsonName()] = $this->getFormatter()->toJson($entity->{'get' . $this->property}());
+        }
+
+        return $json;
+    }
+
+    /**
+     * Add the attribute back to the entity
+     * @param  mixed $entity Entity or entity collection
+     * @param  mixed $value  Value from json hash
+     * @return mixed         Altered entity or entity collection
+     */
+    public function addToEntity($entity, $value)
+    {
+        if (!$this->readOnly) {
+            if (is_array($entity)) {
+                if (array_key_exists($this->getEntity(), $entity)) {
+                    $entity[$this->getEntity()]->{'set' . ucfirst($this->property)}($this->getFormatter()->toEntity($value));
+                }
+            } else {
+                $entity->{'set' . ucfirst($this->property)}($this->getFormatter()->toEntity($value));
+            }
+        }
+
+        return $entity;
+    }
+
+    /**
      * Get the value of Name of the attribute
      * @return string
      */

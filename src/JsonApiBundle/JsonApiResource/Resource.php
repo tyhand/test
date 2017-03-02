@@ -57,13 +57,111 @@ abstract class Resource
      */
     public function toJson($entity)
     {
-        return ['data' => []];
+        $json = [
+            'type' => $this->getName(),
+            'id'   => $this->getIdForEntity($entity)
+        ];
+
+        if (0 < count($this->getAttributes())) {
+            $json['attributes'] = [];
+        }
+
+        foreach($this->getAttributes() as $attribute) {
+            $json = $attribute->addToJson($entity, $json);
+        }
+
+        return $json;
     }
 
-
+    /**
+     * Hydrate entities from data
+     * @param  array  $data Hash from json data
+     * @return mixed        Entity
+     */
     public function toEntity(array $data)
     {
+        // Type check
+        if ($data['type'] !== $this->getName()) {
+            throw new \Exception('Resource and type do not match');
+        }
 
+        // Check if an id is present
+        if (array_key_exists('id', $data)) {
+            // Load the entity
+            $entity = $this->loadEntityById($data['id']);
+        } else {
+            // Create new
+            $entity = $this->createNewEntity();
+        }
+
+        if (array_key_exists('attributes', $data)) {
+            foreach($data['attributes'] as $name => $value) {
+                $attribute = $this->getAttributeByJsonName($name);
+                if (null !== $attribute) {
+                    $entity = $attribute->addToEntity($entity, $value);
+                }
+            }
+        }
+
+        return $entity;
+    }
+
+    /////////////////////
+    // PROCESS METHODS //
+    /////////////////////
+
+    /**
+     * Get the id from an entity or entity collection
+     * @param  mixed  $entity Entity
+     * @return string         Id
+     */
+    protected function getIdForEntity($entity)
+    {
+        if ($this->isComposite()) {
+            $ids = [];
+            foreach($entity as $e) {
+                $ids[] = $e->getId();
+            }
+            return implode('-', $ids);
+        } else {
+            return $entity->getId();
+        }
+    }
+
+    /**
+     * Load the resource's entity (or entities) by id
+     * @param  mixed $id Id
+     * @return mixed     Entity
+     */
+    protected function loadEntityById($id)
+    {
+        if ($this->isComposite()) {
+            $ids = explode('-', $id);
+            $entityMap = [];
+            foreach($this->getEntity() as $key => $entityName) {
+                $entityMap[$entityName] = $this->getManager()->getEntityLoader()->loadEntity($entityName, $ids[$key]);
+            }
+            return $entityMap;
+        } else {
+            return $this->getManager()->getEntityLoader()->loadEntity($this->getEntity(), $id);
+        }
+    }
+
+    /**
+     * Create a new entity for this resource
+     * @return mixed Entity
+     */
+    protected function createNewEntity()
+    {
+        if ($this->isComposite()) {
+            $entityMap = [];
+            foreach($this->getEntity() as $class) {
+                $entityMap[$class] = new $class();
+            }
+            return $entityMap;
+        } else {
+            return new $this->entity();
+        }
     }
 
     /////////////////
@@ -159,5 +257,28 @@ abstract class Resource
     public function isComposite()
     {
         return $this->isComposite;
+    }
+
+    /**
+     * Get the attributes
+     * @return array Array of attributes keyed by name
+     */
+    public function getAttributes()
+    {
+        return $this->attributes;
+    }
+
+    /**
+     * Get an attribute by its json name
+     * @param  string    $jsonName Json name
+     * @return Attribute           Attribute if exists
+     */
+    public function getAttributeByJsonName($jsonName)
+    {
+        if (array_key_exists($jsonName, $this->attributesByJsonName)) {
+            return $this->attributesByJsonName[$jsonName];
+        } else {
+            return null;
+        }
     }
 }

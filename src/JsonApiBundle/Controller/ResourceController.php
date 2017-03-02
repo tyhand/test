@@ -28,7 +28,7 @@ class ResourceController extends Controller
     {
         $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
 
-        $entity = $resource->toEntity(json_decode($request->getContent(), true));
+        $entity = $resource->toEntity(json_decode($request->getContent(), true)['data']);
 
         $this->getDoctrine()->getManager()->persist($entity);
         $this->getDoctrine()->getManager()->flush();
@@ -51,7 +51,7 @@ class ResourceController extends Controller
     {
         $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
 
-        $entity = $resource->toEntity(json_decode($request->getContent(), true));
+        $entity = $resource->toEntity(json_decode($request->getContent(), true)['data']);
 
         $this->getDoctrine()->getManager()->flush();
 

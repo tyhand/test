@@ -77,12 +77,53 @@ class ResourceReader
                     );
                     if ($attributeAnnotation) {
                         $resourceBuilder->addAttribute($property->name, $attributeAnnotation);
+                        continue;
+                    }
+
+                    $hasOneAnnotation = $this->annotationReader->getPropertyAnnotation(
+                        $propery,
+                        'JsonApiBundle\Annotation\HasOne'
+                    );
+                    if ($hasOneAnnotation) {
+                        $resourceBuilder->addHasOne($property, $hasOneAnnotation);
+                        continue;
+                    }
+
+                    $hasManyAnnotation = $this->annotationReader->getPropertyAnnotation(
+                        $propery,
+                        'JsonApiBundle\Annotation\HasMany'
+                    );
+                    if ($hasManyAnnotation) {
+                        $resourceBuilder->addHasMany($property, $hasManyAnnotation);
+                        continue;
+                    }
+                }
+
+                foreach($reflection->getMethods() as $method) {
+                    $filterAnnotation = $this->annotationReader->getMethodAnnotation(
+                        $method,
+                        'JsonApiBundle\Annotation\Filter'
+                    );
+                    if ($filterAnnotation) {
+                        $resourceBuilder->addFilter($method, $filterAnnotation);
+                        continue;
+                    }
+
+                    $validatorAnnotation = $this->annotationReader->getMethodAnnotation(
+                        $method,
+                        'JsonApiBundle\Annotation\Validator'
+                    );
+                    if ($validatorAnnotation) {
+                        $resourceBuilder->addValidator($method, $validatorAnnotation);
+                        continue;
                     }
                 }
 
                 $resource = $resourceBuilder->build();
                 $resources[$resource->getName()] = $resource;
             }
+
+
         }
 
         return $resources;

@@ -49,6 +49,12 @@ class HasMany extends Annotation
     public $setMethod;
 
     /**
+     * Method to call on the entity to get the id
+     * @var string
+     */
+    public $getIdMethod = 'getId';
+
+    /**
      * Get the value of Resource of the many side of the relation
      * @return string
      */
@@ -76,7 +82,7 @@ class HasMany extends Annotation
     }
 
     /**
-     * Get the value of Method to add relation 
+     * Get the value of Method to add relation
      * @return string
      */
     public function getAddMethod()
@@ -85,7 +91,7 @@ class HasMany extends Annotation
     }
 
     /**
-     * Get the value of Method to remove a relation 
+     * Get the value of Method to remove a relation
      * @return string
      */
     public function getRemoveMethod()
@@ -94,7 +100,7 @@ class HasMany extends Annotation
     }
 
     /**
-     * Get the value of Method to set the whole list of relationships 
+     * Get the value of Method to set the whole list of relationships
      * @return string
      */
     public function getSetMethod()
@@ -102,4 +108,12 @@ class HasMany extends Annotation
         return $this->setMethod;
     }
 
+    /**
+     * Get the getid method for the relationship
+     * @return string
+     */
+    public function getGetIdMethod()
+    {
+        return $this->getIdMethod;
+    }
 }
