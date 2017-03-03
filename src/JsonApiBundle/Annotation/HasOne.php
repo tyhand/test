@@ -13,10 +13,14 @@ class HasOne extends Annotation
     /**
      * Resource of the many side of the relation
      * @var string
-     *
-     * @Required
      */
     public $resource;
+
+    /**
+     * Name of the relation as it appears in json
+     * @var string
+     */
+    public $jsonName;
 
     /**
      * Property name
@@ -43,6 +47,15 @@ class HasOne extends Annotation
     public function getResource()
     {
         return $this->resource;
+    }
+
+    /**
+     * Name of the relationship in json
+     * @return string
+     */
+    public function getJsonName()
+    {
+        return $this->jsonName;
     }
 
     /**

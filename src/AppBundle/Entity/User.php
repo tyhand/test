@@ -68,6 +68,15 @@ class User
     }
 
     /**
+     * Get foos
+     * @return \Doctrine\Common\Collections\ArrayCollection
+     */
+    public function getFoos()
+    {
+        return $this->foos;
+    }
+
+    /**
      * Set foos
      * @param  DoctrineCommonCollectionsArrayCollection $foos Foos
      * @return self
@@ -103,7 +112,8 @@ class User
     public function removeFoo(Foo $foo)
     {
         if ($this->foos->contains($foo)) {
-            $this->foos->remove($foo);
+            $foo->setUser(null);
+            $this->foos->removeElement($foo);
         }
         return $this;
     }

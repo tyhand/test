@@ -35,16 +35,28 @@ abstract class Resource
     private $isComposite;
 
     /**
-     * Hash of attributes
+     * Hash of attributes keyed by json name
      * @var array
      */
     private $attributes = [];
 
     /**
-     * Hash of attributes keyed by json name for hydration
+     * Hash of relationships keyed by json name
      * @var array
      */
-    private $attributesByJsonName = [];
+    private $relationships = [];
+
+    /**
+     * Filters
+     * @var array
+     */
+    private $filters = [];
+
+    /**
+     * Validators
+     * @var array
+     */
+    private $validators = [];
 
     ////////////////////
     // FORMAT METHODS //
@@ -65,9 +77,16 @@ abstract class Resource
         if (0 < count($this->getAttributes())) {
             $json['attributes'] = [];
         }
+        if (0 < count($this->getRelationships())) {
+            $json['relationships'] = [];
+        }
 
         foreach($this->getAttributes() as $attribute) {
             $json = $attribute->addToJson($entity, $json);
+        }
+
+        foreach($this->getRelationships() as $relationship) {
+            $json = $relationship->addToJson($entity, $json);
         }
 
         return $json;
@@ -99,6 +118,15 @@ abstract class Resource
                 $attribute = $this->getAttributeByJsonName($name);
                 if (null !== $attribute) {
                     $entity = $attribute->addToEntity($entity, $value);
+                }
+            }
+        }
+
+        if (array_key_exists('relationships', $data)) {
+            foreach($data['relationships'] as $name => $relationData) {
+                $relationship = $this->getRelationshipByJsonName($name);
+                if (null !== $relationship) {
+                    $relationship->addToEntity($entity, $relationData, $this->getManager());
                 }
             }
         }
@@ -164,6 +192,84 @@ abstract class Resource
         }
     }
 
+    ////////////////////////////////////
+    // FILTERING, SORTING, AND PAGING //
+    ////////////////////////////////////
+
+
+    public function find()
+    {
+        // Start
+        // Filters
+        // Sorts
+        // Pagination
+        // beforeQuery
+        // After find
+    }
+
+    public function processFilters()
+    {
+
+    }
+
+
+    public function processSorts()
+    {
+
+    }
+
+
+    public function processPagination()
+    {
+
+    }
+
+
+    public function beforeQuery()
+    {
+
+    }
+
+    public function afterFind()
+    {
+
+    }
+
+    ////////////////
+    // VALIDATION //
+    ////////////////
+
+    /**
+     * Validate the entity generated from the json input
+     * @return array Errors if any
+     */
+    public function validateEntity($entity)
+    {
+        $errors = [];
+        foreach($this->validators as $validator) {
+            if (!$this->{$validator->getMethod()}($entity)) {
+                $errors[] = new Error(
+                    $validator->getErrorTitle(),
+                    $validator->getErrorDetail(),
+                    $valdiator->getErrorCode()
+                );
+            }
+        }
+        $errors = $this->afterValidation($errors);
+        return $errors;
+    }
+
+    /**
+     * Stub method to perform operations on the errors after the fact
+     * @param  array $errors Error objects (or empty if there are none)
+     * @return array         Altered errors array
+     */
+    public function afterValidation($errors)
+    {
+        return $errors;
+    }
+
+
     /////////////////
     // ADD METHODS //
     /////////////////
@@ -175,8 +281,38 @@ abstract class Resource
      */
     public function addAttribute(Attribute $attribute)
     {
-        $this->attributes[$attribute->getName()] = $attribute;
-        $this->attributesByJsonName[$attribute->getJsonName()] = $attribute;
+        $this->attributes[$attribute->getJsonName()] = $attribute;
+        return $this;
+    }
+
+    /**
+     * Add a relationship to the resource
+     * @param  Relationship $relation Relation
+     * @return self
+     */
+    public function addRelationship(Relationship $relation)
+    {
+        $this->relationships[$relation->getJsonName()] = $relation;
+        return $this;
+    }
+
+    /**
+     * Add a filter
+     * @param Filter $filter Filter
+     */
+    public function addFilter(Filter $filter)
+    {
+        $this->filters[$filter->getName()] = $filter;
+        return $this;
+    }
+
+    /**
+     * Add a validator
+     * @param Validator $validator Validator
+     */
+    public function addValidator(Validator $validator)
+    {
+        $this->validators[$validator->getMethod()] = $validator;
         return $this;
     }
 
@@ -261,7 +397,7 @@ abstract class Resource
 
     /**
      * Get the attributes
-     * @return array Array of attributes keyed by name
+     * @return array Array of attributes keyed by json name
      */
     public function getAttributes()
     {
@@ -275,8 +411,31 @@ abstract class Resource
      */
     public function getAttributeByJsonName($jsonName)
     {
-        if (array_key_exists($jsonName, $this->attributesByJsonName)) {
-            return $this->attributesByJsonName[$jsonName];
+        if (array_key_exists($jsonName, $this->attributes)) {
+            return $this->attributes[$jsonName];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Get the relationships
+     * @return array Relationship hash keyed by json name
+     */
+    public function getRelationships()
+    {
+        return $this->relationships;
+    }
+
+    /**
+     * Get a relationhsip by its json name
+     * @param  string       $jsonName Json name
+     * @return Relationship           Relationship if exists
+     */
+    public function getRelationshipByJsonName($jsonName)
+    {
+        if (array_key_exists($jsonName, $this->relationships)) {
+            return $this->relationships[$jsonName];
         } else {
             return null;
         }

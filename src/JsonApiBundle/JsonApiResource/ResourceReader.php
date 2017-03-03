@@ -81,20 +81,20 @@ class ResourceReader
                     }
 
                     $hasOneAnnotation = $this->annotationReader->getPropertyAnnotation(
-                        $propery,
+                        $property,
                         'JsonApiBundle\Annotation\HasOne'
                     );
                     if ($hasOneAnnotation) {
-                        $resourceBuilder->addHasOne($property, $hasOneAnnotation);
+                        $resourceBuilder->addHasOne($property->name, $hasOneAnnotation);
                         continue;
                     }
 
                     $hasManyAnnotation = $this->annotationReader->getPropertyAnnotation(
-                        $propery,
+                        $property,
                         'JsonApiBundle\Annotation\HasMany'
                     );
                     if ($hasManyAnnotation) {
-                        $resourceBuilder->addHasMany($property, $hasManyAnnotation);
+                        $resourceBuilder->addHasMany($property->name, $hasManyAnnotation);
                         continue;
                     }
                 }

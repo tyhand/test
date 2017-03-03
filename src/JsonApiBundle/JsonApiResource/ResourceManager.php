@@ -40,6 +40,20 @@ class ResourceManager
     }
 
     /**
+     * Load an entity from resource
+     * @param  ResourceIdentifier $identifier Identifier
+     * @return mixed                          Loaded entity
+     */
+    public function loadEntityFromIdentifier(ResourceIdentifier $identifier)
+    {
+        $resource = $this->getResource($identifier->getType());
+        if (!$resource) {
+            throw new \Exception('Type not found');
+        }
+        return $this->entityLoader->loadEntity($resource->getEntity(), $identifier->getId());
+    }
+
+    /**
      * Add a formatter
      * @param  Formatter $formatter Formatter
      * @return self

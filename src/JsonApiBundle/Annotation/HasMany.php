@@ -13,10 +13,14 @@ class HasMany extends Annotation
     /**
      * Resource of the many side of the relation
      * @var string
-     *
-     * @Required
      */
     public $resource;
+
+    /**
+     * Name of the relation as it appears in json
+     * @var string
+     */
+    public $jsonName;
 
     /**
      * Property name
@@ -43,12 +47,6 @@ class HasMany extends Annotation
     public $removeMethod;
 
     /**
-     * Method to set the whole list of relationships
-     * @var string
-     */
-    public $setMethod;
-
-    /**
      * Method to call on the entity to get the id
      * @var string
      */
@@ -61,6 +59,15 @@ class HasMany extends Annotation
     public function getResource()
     {
         return $this->resource;
+    }
+
+    /**
+     * Name of the relationship in json
+     * @return string
+     */
+    public function getJsonName()
+    {
+        return $this->jsonName;
     }
 
     /**

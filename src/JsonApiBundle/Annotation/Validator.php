@@ -19,8 +19,6 @@ class Validator extends Annotation
 
     /**
      * @var string
-     *
-     * @Required
      */
     public $errorDetail;
 

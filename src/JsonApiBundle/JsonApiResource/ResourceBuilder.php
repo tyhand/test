@@ -101,46 +101,132 @@ class ResourceBuilder
 
         $this->resource->{$property} = $attribute;
         $this->resource->addAttribute($attribute);
+
+        return $this;
     }
 
     /**
      * Add a has one relationship
-     * @param string           $property   Name of the resource's property
-     * @param AnnotationHasOne $annotation Has one annotation
+     * @param  string           $property   Name of the resource's property
+     * @param  AnnotationHasOne $annotation Has one annotation
+     * @return self
      */
     public function addHasOne($property, Annotation\HasOne $annotation)
     {
+        $relation = new HasOneRelationship($property);
 
+        if ($annotation->getResource()) {
+            $relation->setResource($annotation->getResource());
+        } else {
+            $relation->setResource($property);
+        }
+
+        if ($annotation->getJsonName()) {
+            $relation->setJsonName($annotation->getJsonName());
+        } else {
+            $relation->setJsonName(strtolower(preg_replace('/(?<!^)([A-Z])/', '-$1', $property)));
+        }
+
+        if ($annotation->getProperty()) {
+            $relation->setProperty($annotation->getProperty());
+        } else {
+            $relation->setProperty($property);
+        }
+
+        if ($annotation->getEntity()) {
+            $relation->setEntity($annotation->getEntity());
+        }
+
+        $relation->setGetIdMethod($annotation->getGetIdMethod());
+
+        return $this;
     }
 
     /**
      * Add a has many relationship
-     * @param string           $property   Name of the resource's property
-     * @param AnnotationHasOne $annotation Has many annotation
+     * @param  string           $property   Name of the resource's property
+     * @param  AnnotationHasOne $annotation Has many annotation
+     * @return self
      */
     public function addHasMany($property, Annotation\HasMany $annotation)
     {
+        $relation = new HasManyRelationship($property);
 
+        if ($annotation->getResource()) {
+            $relation->setResource($annotation->getResource());
+        } else {
+            $relation->setResource($property);
+        }
+
+        if ($annotation->getJsonName()) {
+            $relation->setJsonName($annotation->getJsonName());
+        } else {
+            $relation->setJsonName(strtolower(preg_replace('/(?<!^)([A-Z])/', '-$1', $property)));
+        }
+
+        if ($annotation->getProperty()) {
+            $relation->setProperty($annotation->getProperty());
+        } else {
+            $relation->setProperty($property);
+        }
+
+        if ($annotation->getEntity()) {
+            $relation->setEntity($annotation->getEntity());
+        }
+
+        $relation->setGetIdMethod($annotation->getGetIdMethod());
+
+        if ($annotation->getAddMethod()) {
+            $relation->setAddMethod($annotation->getAddMethod());
+        } else {
+            $relation->setAddMethod('add' . ucfirst(Inflect::singularize($relation->getProperty())));
+        }
+
+
+        if ($annotation->getRemoveMethod()) {
+            $relation->setRemoveMethod($annotation->getRemoveMethod());
+        } else {
+            $relation->setRemoveMethod('remove' . ucfirst(Inflect::singularize($relation->getProperty())));
+        }
+
+        $this->resource->{$property} = $relation;
+        $this->resource->addRelationship($relation);
+
+        return $this;
     }
 
     /**
      * Add a filter
-     * @param string           $method     Name of the resource's method
-     * @param AnnotationFilter $annotation Filter annotation
+     * @param  string           $method     Name of the resource's method
+     * @param  AnnotationFilter $annotation Filter annotation
+     * @return self
      */
     public function addFilter($method, Annotation\Filter $annotation)
     {
+        $filter = new Filter($method);
 
+        $this->resource->addFilter($filter);
+        return $this;
     }
 
     /**
      * Add a validator
-     * @param string              $method     Name of the resource's method
-     * @param AnnotationValidator $annotation Validator annotation
+     * @param  string              $method     Name of the resource's method
+     * @param  AnnotationValidator $annotation Validator annotation
+     * @return self
      */
     public function addValidator($method, Annotation\Validator $annotation)
     {
+        $validator = new Validator(
+            $method,
+            $annotation->getErrorTitle(),
+            $annotation->getErrorDetail(),
+            $annotation->getErrorCode()
+        );
 
+        $this->resource->addValidator($validator);
+
+        return $this;
     }
 
     /**

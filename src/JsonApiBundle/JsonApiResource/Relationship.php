@@ -4,5 +4,196 @@ namespace JsonApiBundle\JsonApiResource;
 
 abstract class Relationship
 {
+    /**
+     * Name
+     * @var string
+     */
+    private $name;
+
+    /**
+     * Json name
+     * @var string
+     */
+    private $jsonName;
+
+    /**
+     * Name of the related resource
+     * @var string
+     */
+    private $resource;
+
+    /**
+     * Property of the entity that handles the relation
+     * @var string
+     */
+    private $property;
+
+    /**
+     * Name of the entity with the property if in a composite resource
+     * @var string
+     */
+    private $entity;
+
+    /**
+     * Method to call on the relation to get the id
+     * @var string
+     */
+    private $getIdMethod;
+
+    /**
+     * Constructor
+     * @param string $name Name of the relation property
+     */
+    public function __construct($name)
+    {
+        $this->name = $name;
+    }
+
+    /**
+     * Add relation to the json output
+     * @param  mixed  $entity Entity or entity collection
+     * @param  array  $json   Json hash
+     * @return array          Altered json hash
+     */
+    public abstract function addToJson($entity, array $json);
+
+    /**
+     * Add relation back to the entity
+     * @param  mixed          $entity       Entity being built
+     * @param  array          $relationData Json hash of relationship data
+     * @param  ResourceLoader $manager      Resource Manager
+     * @return mixed                        Altered entity
+     */
+    public abstract function addToEntity($entity, array $relationData, ResourceManager $manager);
+
+    /**
+     * Get the id for the related entity
+     * @param  mixed  $entity Entity to get id for
+     * @return mixed          Id
+     */
+    public function getIdForRelatedEntity($entity)
+    {
+        return $entity->{$this->getIdMethod}();
+    }
+
+    /**
+     * Get the value of Name
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * Set the value of Name
+     * @param string property
+     * @return self
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    /**
+     * Get the value of Name of the related resource
+     * @return string
+     */
+    public function getResource()
+    {
+        return $this->resource;
+    }
+
+    /**
+     * Set the value of Name of the related resource
+     * @param string resource
+     * @return self
+     */
+    public function setResource($resource)
+    {
+        $this->resource = $resource;
+        return $this;
+    }
+
+    /**
+     * Get the value of Json Name of the attribute
+     * @return string
+     */
+    public function getJsonName()
+    {
+        return $this->jsonName;
+    }
+
+    /**
+     * Set the value of Json Name of the attribute
+     * @param string name
+     * @return self
+     */
+    public function setJsonName($jsonName)
+    {
+        $this->jsonName = $jsonName;
+        return $this;
+    }
+
+    /**
+     * Get the value of Property of the entity that handles the relation
+     * @return string
+     */
+    public function getProperty()
+    {
+        return $this->property;
+    }
+
+    /**
+     * Set the value of Property of the entity that handles the relation
+     * @param string property
+     * @return self
+     */
+    public function setProperty($property)
+    {
+        $this->property = $property;
+        return $this;
+    }
+
+    /**
+     * Get the value of Name of the entity with the property if in a composite resource
+     * @return string
+     */
+    public function getEntity()
+    {
+        return $this->entity;
+    }
+
+    /**
+     * Set the value of Name of the entity with the property if in a composite resource
+     * @param string entity
+     * @return self
+     */
+    public function setEntity($entity)
+    {
+        $this->entity = $entity;
+        return $this;
+    }
+
+    /**
+     * Get the value of Method to call on the relation to get the id
+     * @return string
+     */
+    public function getGetIdMethod()
+    {
+        return $this->getIdMethod;
+    }
+
+    /**
+     * Set the value of Method to call on the relation to get the id
+     * @param string getIdMethod
+     * @return self
+     */
+    public function setGetIdMethod($getIdMethod)
+    {
+        $this->getIdMethod = $getIdMethod;
+        return $this;
+    }
 
 }
