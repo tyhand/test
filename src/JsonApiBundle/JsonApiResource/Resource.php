@@ -2,7 +2,8 @@
 
 namespace JsonApiBundle\JsonApiResource;
 
-use Doctrine\ORM\EntityManager;
+use Symfony\Component\HttpFoundation\ParameterBag;
+use JsonApiBundle\Util\Inflect;
 
 abstract class Resource
 {
@@ -82,7 +83,9 @@ abstract class Resource
         }
 
         foreach($this->getAttributes() as $attribute) {
-            $json = $attribute->addToJson($entity, $json);
+            if (!$attribute->getInputOnly()) {
+                $json = $attribute->addToJson($entity, $json);
+            }
         }
 
         foreach($this->getRelationships() as $relationship) {
@@ -196,43 +199,161 @@ abstract class Resource
     // FILTERING, SORTING, AND PAGING //
     ////////////////////////////////////
 
-
-    public function find()
+    /**
+     * Build a query to retrieve and sort resources
+     * @param  ParameterBag $parameters Query Parameters
+     * @return array                    Results
+     */
+    public function find(ParameterBag $parameters)
     {
         // Start
+        $alias = Inflect::singularize($this->getName());
+        if ($this->isComposite()) {
+            // Terrible temp solution
+            $queryBuilder = $this->getManager()->getEntityLoader()->getEntityManager()->getRepository(reset($this->entity))->createQueryBuilder($alias);
+        } else {
+            $queryBuilder = $this->getManager()->getEntityLoader()->getEntityManager()->getRepository($this->entity)->createQueryBuilder($alias);
+        }
+
+        $joinManager = new JoinManager($alias);
+
         // Filters
+        if ($parameters->has('filter')) {
+            $queryBuilder = $this->processFilters($parameters->get('filter'), $alias, $queryBuilder, $joinManager);
+        }
+
+        // Get the count before pagination
+        $result = new FindResult();
+        $totalQueryBuilder = clone $queryBuilder;
+        $totalQueryBuilder->select('count(distinct ' . $alias . '.id)');
+        $result->setCount($totalQueryBuilder->getQuery()->getSingleScalarResult());
+        unset($totalQueryBuilder);
+
         // Sorts
+        if ($parameters->has('sort')) {
+            $queryBuilder = $this->processSorts($parameters->get('sort'), $alias, $queryBuilder, $joinManager);
+        }
+
         // Pagination
+        $queryBuilder = $this->processPagination($parameters->get('page', []), $alias, $queryBuilder, $result);
+
         // beforeQuery
+        $queryBuilder = $this->beforeQuery($queryBuilder);
+
+        // run the query
+        $result->setResults($queryBuilder->getQuery()->getResult());
+
         // After find
+        return $this->afterFind($result);
     }
 
-    public function processFilters()
+    /**
+     * Process the filters
+     * @param  array        $filterParameters Filter parameters
+     * @param  string       $alias            Alias of the root entity
+     * @param  QueryBuilder $queryBuilder     Query Builder
+     * @param  JoinManager  $joinManager      Array of joins that have been add to the querybuilder
+     * @return QueryBuilder                   Altered Query Builder
+     */
+    public function processFilters($filterParameters, $alias, $queryBuilder, JoinManager $joinManager)
     {
+        if (is_array($filterParameters)) {
+            foreach($filterParameters as $name => $value) {
+                if (array_key_exists($name, $this->filters)) {
+                    $queryBuilder = $this->{$this->filters[$name]->getMethod()}($value, $alias, $queryBuilder, $joinManager);
+                }
+            }
+        }
 
+        return $queryBuilder;
     }
 
-
-    public function processSorts()
+    /**
+     * Process the sort parameter
+     * @param  string       $sortParameter  Value of the sort parameter
+     * @param  string       $alias          Alias
+     * @param  QueryBuilder $queryBuilder   Query Builder
+     * @param  JoinManager  $joinManager    Join Manager
+     * @return QueryBuilder                 Altered Query Builder
+     */
+    public function processSorts($sortParameter, $alias, $queryBuilder, JoinManager $joinManager)
     {
+        $sorts = explode(',', $sortParameter);
+        foreach($sorts as $sort) {
+            // Check if in a relation
+            if (false === strpos($sort, '.')) {
+                if (substr($sort, 0, 1) === '-') {
+                    $direction = 'DESC';
+                    $sort = substr($sort, 1);
+                } else {
+                    $direction = 'ASC';
+                }
 
+                // Check that the attribute is real and sortable
+                if (array_key_exists($sort, $this->getAttributes()) && $this->getAttributes()[$sort]->getSortable()) {
+                    $queryBuilder->addOrderBy($alias . '.' . $this->getAttributes()[$sort]->getProperty(), $direction);
+                }
+            } else {
+                dump('not done'); die;
+            }
+        }
+
+        return $queryBuilder;
     }
 
-
-    public function processPagination()
+    /**
+     * Default paginator, uses page[number] and page[size]
+     * @param  array        $pageParameters Value of the sort parameter
+     * @param  string       $alias          Alias
+     * @param  QueryBuilder $queryBuilder   Query Builder
+     * @param  FindResult   $result         Find result object to add page info to
+     * @return QueryBuilder                 Altered query builder
+     */
+    public function processPagination($pageParameters, $alias, $queryBuilder, FindResult $result)
     {
+        if (isset($pageParameters['number'])){
+            $number = $pageParameters['number'];
+        } else {
+            $number = 1;
+        }
 
+        if (isset($pageParameters['size'])) {
+            $size = $pageParameters['size'];
+            // Enforce a limit though
+            if ($size > 1000) {
+                $size = 1000;
+            }
+        } else {
+            $size = 25;
+        }
+
+        $queryBuilder->setMaxResults($size);
+        $queryBuilder->setFirstResult($size * ($number - 1));
+
+        $result->setPageNumber($number);
+        $result->setPageSize($size);
+
+        return $queryBuilder;
     }
 
-
-    public function beforeQuery()
+    /**
+     * Hook to make last minute changes to the querybuilder before the query is created
+     * @param  QueryBuilder $queryBuilder Query Builder
+     * @return QueryBuilder               Query Builder
+     */
+    public function beforeQuery($queryBuilder)
     {
-
+        return $queryBuilder;
     }
 
-    public function afterFind()
+    /**
+     * Hook to change the results before they are returned by the find method
+     * @param  FindResult $result Results
+     * @return array              Results
+     */
+    public function afterFind(FindResult $result)
     {
-
+        return $result;
     }
 
     ////////////////

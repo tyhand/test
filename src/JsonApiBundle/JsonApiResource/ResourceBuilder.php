@@ -98,6 +98,7 @@ class ResourceBuilder
 
         $attribute->setSortable($annotation->getSortable());
         $attribute->setReadOnly($annotation->getReadOnly());
+        $attribute->setInputOnly($annotation->getInputOnly());
 
         $this->resource->{$property} = $attribute;
         $this->resource->addAttribute($attribute);
@@ -204,6 +205,12 @@ class ResourceBuilder
     public function addFilter($method, Annotation\Filter $annotation)
     {
         $filter = new Filter($method);
+
+        if ($annotation->getName()) {
+            $filter->setName($annotation->getName());
+        } else {
+            $filter->setName(strtolower(preg_replace('/(?<!^)([A-Z])/', '-$1', $method)));
+        }
 
         $this->resource->addFilter($filter);
         return $this;

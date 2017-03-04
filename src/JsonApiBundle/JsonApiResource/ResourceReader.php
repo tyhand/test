@@ -105,7 +105,7 @@ class ResourceReader
                         'JsonApiBundle\Annotation\Filter'
                     );
                     if ($filterAnnotation) {
-                        $resourceBuilder->addFilter($method, $filterAnnotation);
+                        $resourceBuilder->addFilter($method->name, $filterAnnotation);
                         continue;
                     }
 
@@ -114,7 +114,7 @@ class ResourceReader
                         'JsonApiBundle\Annotation\Validator'
                     );
                     if ($validatorAnnotation) {
-                        $resourceBuilder->addValidator($method, $validatorAnnotation);
+                        $resourceBuilder->addValidator($method->name, $validatorAnnotation);
                         continue;
                     }
                 }

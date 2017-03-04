@@ -13,9 +13,14 @@ class ResourceController extends Controller
     public function resourceIndexAction(Request $request)
     {
         $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
-        $user = new \AppBundle\Entity\User();
-        $user->setUsername('tyhand');
-        return new JsonResponse($resource->toJson($user));
+        $result = $resource->find($request->query);
+
+        $json = ['data' => []];
+        foreach($result->getResults() as $entity) {
+            $json['data'][] = $resource->toJson($entity);
+        }
+
+        return new JsonResponse($json);
     }
 
 

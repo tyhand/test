@@ -47,6 +47,12 @@ class Attribute extends Annotation
     public $sortable = true;
 
     /**
+     * Input Only
+     * @var boolean
+     */
+    public $inputOnly = false;
+
+    /**
      * Get the entity if it exists
      * @return string Entity
      */
@@ -99,4 +105,14 @@ class Attribute extends Annotation
     {
         return $this->sortable;
     }
+
+    /**
+     * Get the value of Input Only
+     * @return boolean
+     */
+    public function getInputOnly()
+    {
+        return $this->inputOnly;
+    }
+
 }

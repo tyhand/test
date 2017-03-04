@@ -31,4 +31,13 @@ class EntityLoader
     {
         return $this->entityManager->getRepository($entityName)->findOneById($id);
     }
+
+    /**
+     * Get the entity manager
+     * @return EntityManager Entity Manager
+     */
+    public function getEntityManager()
+    {
+        return $this->entityManager;
+    }
 }

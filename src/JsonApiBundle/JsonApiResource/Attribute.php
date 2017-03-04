@@ -47,6 +47,12 @@ class Attribute
     private $formatter;
 
     /**
+     * Input Only
+     * @var boolean
+     */
+    private $inputOnly;
+
+    /**
      * Constructor
      * @param string $name Name of the attribute
      */
@@ -235,4 +241,23 @@ class Attribute
         return $this;
     }
 
+    /**
+     * Get the value of Input Only
+     * @return boolean
+     */
+    public function getInputOnly()
+    {
+        return $this->inputOnly;
+    }
+
+    /**
+     * Set the value of Input Only
+     * @param boolean inputOnly
+     * @return self
+     */
+    public function setInputOnly($inputOnly)
+    {
+        $this->inputOnly = $inputOnly;
+        return $this;
+    }
 }
