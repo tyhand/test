@@ -8,47 +8,110 @@ namespace JsonApiBundle\JsonApiResource;
 class JoinManager
 {
     /**
-     * Joins
-     * @var array
-     */
-    private $joins;
-
-    /**
      * Alias of the root
      * @var string
      */
     private $alias;
 
     /**
+     * Resource root
+     * @var string
+     */
+    private $rootResource;
+
+    /**
+     * Query builder
+     * @var QueryBuilder
+     */
+    private $queryBuilder;
+
+    /**
+     * Resource Manager
+     * @var ResourceManager
+     */
+    private $resourceManager;
+
+    /**
+     * Join Map
+     * @var array
+     */
+    private $joins;
+
+    /**
+     * Hash of joined resources
+     * @var array
+     */
+    private $resources;
+
+    /**
      * Constructor
      */
-    public function __construct($alias)
+    public function __construct($alias, Resource $rootResource, $queryBuilder, ResourceManager $manager)
     {
         $this->alias = $alias;
-        $this->joins = [$alias];
+        $this->rootResource = $rootResource;
+        $this->queryBuilder = $queryBuilder;
+        $this->manager = $manager;
+
+        $this->resources = [$this->alias => $this->rootResource];
+        $this->joins = [];
     }
 
     /**
-     * Adds a requested join to the query builder
-     * @param string       $joinString   Join string (e.g. 'entity.relation.attribute')
-     * @param QueryBuilder $queryBuilder Query builder to add join too
+     * Extract attribute and process the required joins
+     * @param  string    $name Full name from the root resource
+     * @return Attribute       Attribute
      */
-    public function addJoin($joinString, $queryBuilder)
+    public function extractAttribute($name)
     {
-        $parts = explode('.', $joinString);
-        // Check that the first piece is in the chain
-        if (!in_array($parts[0], $this->joins)) {
-            throw new \Exception('Unrooted join');
+        $parts = explode('.', $name);
+        $resourceName = [];
+        for($i = 0; $i < count($parts) - 1; $i++) {
+            $resourceName[] = $parts[$i];
         }
 
-        for($i = 1; $i < count($parts) - 1; $i++) {
-            if (!in_array($parts[$i], $this->joins)) {
-                // Add the part to the join, and join it in the query builder
-                $queryBuilder->join($parts[$i - 1] . '.' . $parts[$i], $parts[$i]);
-                $this->joins[] = $parts[$i];
+        $aliasChain = implode('.', $resourceName);
+        $resource = $this->joinResource($aliasChain);
+        $attribute = $resource->getAttributeByJsonName($parts[count($parts) - 1]);
+
+        return new AttributeExtract($attribute, $aliasChain);
+    }
+
+    /**
+     * Join a resource
+     * @param  string   $name Name from root e.g. if bar is the root, and has foo as a relation this would just be foo.  If foo also has a relation called buzz then it will be foo.buzz
+     * @return Resource       Resource
+     */
+    public function joinResource($name)
+    {
+        $parts = explode('.', $name);
+        $currentName = [];
+        $parentAlias = $this->alias;
+        $parentResource = $this->rootResource;
+        $mapPointer = &$this->joins;
+        foreach($parts as $part) {
+            $currentName[] = $part;
+            if (array_key_exists($part, $mapPointer)) {
+                $parentResource = $this->resources[implode('.', $currentName)];
+            } else {
+                // Get the relation from the parent
+                $relation = $parentResource->getRelationshipByJsonName($part);
+                if (!$relation) {
+                    throw new \Exception('Relation not found');
+                }
+                $resource = $this->manager->getResource($relation->getName());
+
+                $this->queryBuilder->join($parentAlias . '.' . $relation->getProperty(), $part);
+
+                $this->resources[implode('.', $currentName)] = $resource;
+                $mapPointer[$part] = [];
+                $parentResource = $resource;
             }
+
+            $parentAlias = $part;
+            $mapPointer = &$mapPointer[$part];
         }
 
-        return $queryBuilder;
+        return $parentResource;
     }
 }

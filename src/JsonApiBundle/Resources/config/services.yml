@@ -7,9 +7,6 @@ services:
   jsonapi.resource_reader:
     class: JsonApiBundle\JsonApiResource\ResourceReader
     arguments:
-      - "AppBundle\\JsonApiResource"
-      - "AppBundle/JsonApiResource"
-      - "%kernel.root_dir%"
       - "@annotation_reader"
 
   jsonapi.entity_loader:

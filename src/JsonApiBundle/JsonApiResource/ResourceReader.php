@@ -14,24 +14,9 @@ use JsonApiBundle\Util\Inflect;
 class ResourceReader
 {
     /**
-     * @var string
-     */
-    private $namespace;
-
-    /**
-     * @var string
-     */
-    private $directory;
-
-    /**
      * @var Reader
      */
     private $annotationReader;
-
-    /**
-     * @var string
-     */
-    private $rootDirectory;
 
     /**
      * List of resource objects
@@ -47,16 +32,10 @@ class ResourceReader
 
     /**
      * Constructor
-     * @param string        $namespace        Namespace to read from
-     * @param string        $directory        Directory to read from
-     * @param string        $rootDirectory    Root Directory
      * @param Reader        $annotationReader Doctrine Annotation Reader
      */
-    public function __construct($namespace, $directory, $rootDirectory, Reader $annotationReader)
+    public function __construct(Reader $annotationReader)
     {
-        $this->namespace = $namespace;
-        $this->directory = $directory;
-        $this->rootDirectory = $rootDirectory;
         $this->annotationReader = $annotationReader;
         $this->resources = [];
         $this->formatters = [];

@@ -227,7 +227,7 @@ abstract class Resource
             $queryBuilder = $this->getManager()->getEntityLoader()->getEntityManager()->getRepository($this->entity)->createQueryBuilder($alias);
         }
 
-        $joinManager = new JoinManager($alias);
+        $joinManager = new JoinManager($alias, $this, $queryBuilder, $this->getManager());
 
         // Filters
         if ($parameters->has('filter')) {
@@ -292,21 +292,25 @@ abstract class Resource
     {
         $sorts = explode(',', $sortParameter);
         foreach($sorts as $sort) {
+            // Get direction
+            if (substr($sort, 0, 1) === '-') {
+                $direction = 'DESC';
+                $sort = substr($sort, 1);
+            } else {
+                $direction = 'ASC';
+            }
+
             // Check if in a relation
             if (false === strpos($sort, '.')) {
-                if (substr($sort, 0, 1) === '-') {
-                    $direction = 'DESC';
-                    $sort = substr($sort, 1);
-                } else {
-                    $direction = 'ASC';
-                }
-
                 // Check that the attribute is real and sortable
                 if (array_key_exists($sort, $this->getAttributes()) && $this->getAttributes()[$sort]->getSortable()) {
                     $queryBuilder->addOrderBy($alias . '.' . $this->getAttributes()[$sort]->getProperty(), $direction);
                 }
             } else {
-                dump('not done'); die;
+                $attributeExtract = $joinManager->extractAttribute($sort);
+                if ($attributeExtract->getAttribute()->getSortable()) {
+                    $queryBuilder->addOrderBy($attributeExtract->getAliasChain() . '.' . $attributeExtract->getAttribute()->getProperty(), $direction);
+                }
             }
         }
 
