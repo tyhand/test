@@ -9,7 +9,7 @@ use JsonApiBundle\JsonApiResource\JsonApiResource;
 use JsonApiBundle\JsonApiResource\Resource as ApiResource;
 
 /**
- * @Resource
+ * @Resource(entity="AppBundle\Entity\Foo")
  */
 class FooResource extends ApiResource
 {

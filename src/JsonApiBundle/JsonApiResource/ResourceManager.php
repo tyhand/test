@@ -23,12 +23,6 @@ class ResourceManager
     private $resources;
 
     /**
-     * Array of formatters keyed by name
-     * @var array
-     */
-    private $formatters;
-
-    /**
      * Constructor
      * @param ResourceReader $resourceReader Resource finder
      */
@@ -36,7 +30,7 @@ class ResourceManager
     {
         $this->resourceReader = $resourceReader;
         $this->entityLoader = $entityLoader;
-        $this->formatters = [];
+        $this->resources = [];
     }
 
     /**
@@ -51,17 +45,6 @@ class ResourceManager
             throw new \Exception('Type not found');
         }
         return $this->entityLoader->loadEntity($resource->getEntity(), $identifier->getId());
-    }
-
-    /**
-     * Add a formatter
-     * @param  Formatter $formatter Formatter
-     * @return self
-     */
-    public function addFormatter(Formatter $formatter)
-    {
-        $this->formatters[$formatter->getName()] = $formatter;
-        return $this;
     }
 
     /**
@@ -80,26 +63,14 @@ class ResourceManager
      */
     public function getResource($name)
     {
-        if (array_key_exists($name, $this->getResources())) {
-            return $this->getResources()[$name];
+        if (array_key_exists($name, $this->resources)) {
+            return $this->resources[$name];
+        } elseif ($this->resourceReader->hasResource($name)) {
+            $this->resources[$name] = $this->resourceReader->readResource($name);
+            $this->resources[$name]->setManager($this);
+            return $this->resources[$name];
         } else {
-            return null;
+            throw new \Exception('Resource not found');
         }
-    }
-
-    /**
-     * Get the resources from the resource reader
-     * @return array Array of resources
-     */
-    private function getResources()
-    {
-        if (null === $this->resources) {
-            $this->resources = $this->resourceReader->readResources($this->formatters);
-            foreach($this->resources as $resource) {
-                $resource->setManager($this);
-            }
-        }
-
-        return $this->resources;
     }
 }

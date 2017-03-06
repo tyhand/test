@@ -4,6 +4,11 @@ parameters:
 #    parameter_name: value
 
 services:
-#    service_name:
-#        class: AppBundle\Directory\ClassName
-#        arguments: ["@another_service_name", "plain_value", "%parameter_name%"]
+    user_resource:
+        class: AppBundle\JsonApiResource\UserResource
+        tags:
+            - { name: jsonapi.resource }
+    foo_resource:
+        class: AppBundle\JsonApiResource\FooResource
+        tags:
+            - { name: jsonapi.resource }

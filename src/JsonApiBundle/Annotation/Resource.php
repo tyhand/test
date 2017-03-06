@@ -12,22 +12,10 @@ class Resource extends Annotation
 {
     /**
      * @var string
-     */
-    public $name;
-
-    /**
-     * @var string
+     *
+     * @Required
      */
     public $entity;
-
-    /**
-     * Get the name
-     * @return string Name
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
 
     /**
      * Get the backing entity (or entities seperated by comma)

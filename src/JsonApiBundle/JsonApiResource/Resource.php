@@ -24,12 +24,6 @@ abstract class Resource
     private $entity;
 
     /**
-     * Name of the resource
-     * @var string
-     */
-    private $name;
-
-    /**
      * True if the resource is represented by multiple backing entities
      * @var boolean
      */
@@ -58,6 +52,24 @@ abstract class Resource
      * @var array
      */
     private $validators = [];
+
+    //////////
+    // NAME //
+    //////////
+
+    /**
+     * Get the name of the resource
+     * @return string Resource name
+     */
+    public function getName()
+    {
+        preg_match('/(\w+)Resource$/', get_class($this), $matches);
+        if (isset($matches[1])) {
+            return Inflect::pluralize(strtolower($matches[1]));
+        } else {
+            throw new \Exception('Cannot determine resource name');
+        }
+    }
 
     ////////////////////
     // FORMAT METHODS //
@@ -484,26 +496,6 @@ abstract class Resource
             $this->isComposite = true;
             $this->entity = explode(',', $entity);
         }
-        return $this;
-    }
-
-    /**
-     * Get the value of Name of the resource
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
-
-    /**
-     * Set the value of Name of the resource
-     * @param string name
-     * @return self
-     */
-    public function setName($name)
-    {
-        $this->name = $name;
         return $this;
     }
 

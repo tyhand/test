@@ -21,46 +21,24 @@ class ResourceBuilder
 
     /**
      * Constructor
-     * @param array $formatters Hash of formatters
+     * @param Resource $resource   Resource service to build out
+     * @param array    $formatters Hash of formatters
      */
-    public function __construct(array $formatters)
+    public function __construct(Resource $resource, array $formatters)
     {
+        $this->resource = $resource;
         $this->formatters = $formatters;
     }
 
     /**
      * Start a new resource
-     * @param  string             $class      Class name of the resource
      * @param  AnnotationResource $annotation Annotation
-     * @param  string             $directory  Directory to guess entity name by default
      * @return self
      */
-    public function createResource($class, Annotation\Resource $annotation, $directory = '/')
+    public function startResource(Annotation\Resource $annotation)
     {
-        $this->resource = new $class();
+        $this->resource->setEntity($annotation->getEntity());
 
-        if ($annotation->getName()) {
-            $this->resource->setName($annotation->getName());
-        } else {
-            preg_match('/(\w+)Resource$/', $class, $matches);
-            if (isset($matches[1])) {
-                $this->resource->setName(Inflect::pluralize(strtolower($matches[1])));
-            } else {
-                throw new \Exception('Cannot determine resource name');
-            }
-        }
-
-        if ($annotation->getEntity()) {
-            $this->resource->setEntity($annotation->getEntity());
-        } else {
-            $namespaceParts = explode('/', $directory);
-            preg_match('/(\w+)Resource$/', $class, $matches);
-            if (isset($matches[1])) {
-                $this->resource->setEntity($namespaceParts[0] . '\\Entity\\' . $matches[1]);
-            } else {
-                throw new \Exception('Cannot determine entity name for resource');
-            }
-        }
         return $this;
     }
 

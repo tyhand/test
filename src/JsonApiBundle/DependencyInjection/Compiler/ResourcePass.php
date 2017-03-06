@@ -6,7 +6,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\Reference;
 
-class FormatterPass implements CompilerPassInterface
+class ResourcePass implements CompilerPassInterface
 {
     /**
      * @{inheritDoc}
@@ -18,14 +18,14 @@ class FormatterPass implements CompilerPassInterface
             return;
         }
 
-        // Get the reader definition
+        // Get the manager definition
         $definition = $container->findDefinition('jsonapi.resource_reader');
 
-        // Get all the services tagged with the formatter tag
-        $tagged = $container->findTaggedServiceIds('jsonapi.formatter');
+        // Get all the services tagged with the resource tag
+        $tagged = $container->findTaggedServiceIds('jsonapi.resource');
         foreach($tagged as $id => $tag) {
-            // Add to the reader
-            $definition->addMethodCall('addFormatter', [new Reference($id)]);
+            // Add to the manager
+            $definition->addMethodCall('addResource', [new Reference($id)]);
         }
     }
 }
