@@ -1,9 +1,4 @@
 services:
-  jsonapi.routing_loader:
-    class: JsonApiBundle\Routing\ResourceRouteLoader
-    tags:
-      - { name: routing.loader }
-
   jsonapi.resource_reader:
     class: JsonApiBundle\JsonApiResource\ResourceReader
     arguments:
@@ -18,6 +13,12 @@ services:
     arguments:
       - "@jsonapi.resource_reader"
       - "@jsonapi.entity_loader"
+
+  jsonapi.routing_loader:
+    class: JsonApiBundle\Routing\ResourceRouteLoader
+    arguments: ["@jsonapi.resource_manager"]
+    tags:
+      - { name: routing.loader }
 
   jsonapi.formatter.default:
     class: JsonApiBundle\JsonApiResource\Formatter

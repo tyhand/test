@@ -53,6 +53,12 @@ abstract class Resource
      */
     private $validators = [];
 
+    /**
+     * Whether the resource can be deleted
+     * @var boolean
+     */
+    private $allowDelete;
+
     //////////
     // NAME //
     //////////
@@ -536,25 +542,22 @@ abstract class Resource
     }
 
     /**
-     * Get the relationships
-     * @return array Relationship hash keyed by json name
+     * Get the value of Whether the resource can be deleted
+     * @return boolean
      */
-    public function getRelationships()
+    public function getAllowDelete()
     {
-        return $this->relationships;
+        return $this->allowDelete;
     }
 
     /**
-     * Get a relationhsip by its json name
-     * @param  string       $jsonName Json name
-     * @return Relationship           Relationship if exists
+     * Set the value of Whether the resource can be deleted
+     * @param boolean allowDelete
+     * @return self
      */
-    public function getRelationshipByJsonName($jsonName)
+    public function setAllowDelete($allowDelete)
     {
-        if (array_key_exists($jsonName, $this->relationships)) {
-            return $this->relationships[$jsonName];
-        } else {
-            return null;
-        }
+        $this->allowDelete = $allowDelete;
+        return $this;
     }
 }

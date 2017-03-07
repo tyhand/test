@@ -41,6 +41,12 @@ abstract class Relationship
     private $getIdMethod;
 
     /**
+     * Whether this relationship can only be accessed through the relationships url
+     * @var boolean
+     */
+    private $relationshipUrlOnly;
+
+    /**
      * Constructor
      * @param string $name Name of the relation property
      */
@@ -196,4 +202,23 @@ abstract class Relationship
         return $this;
     }
 
+    /**
+     * Get the value of Whether this relationship can only be accessed through the relationships url
+     * @return boolean
+     */
+    public function getRelationshipUrlOnly()
+    {
+        return $this->relationshipUrlOnly;
+    }
+
+    /**
+     * Set the value of Whether this relationship can only be accessed through the relationships url
+     * @param boolean relationshipUrlOnly
+     * @return self
+     */
+    public function setRelationshipUrlOnly($relationshipUrlOnly)
+    {
+        $this->relationshipUrlOnly = $relationshipUrlOnly;
+        return $this;
+    }
 }

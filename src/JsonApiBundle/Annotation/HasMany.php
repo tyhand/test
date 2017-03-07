@@ -53,6 +53,12 @@ class HasMany extends Annotation
     public $getIdMethod = 'getId';
 
     /**
+     * Only allow this relationship to be accessed through the relationships url
+     * @var boolean
+     */
+    public $relationshipUrlOnly = false;
+
+    /**
      * Get the value of Resource of the many side of the relation
      * @return string
      */
@@ -122,5 +128,14 @@ class HasMany extends Annotation
     public function getGetIdMethod()
     {
         return $this->getIdMethod;
+    }
+
+    /**
+     * Only allow this relationship to be accessed through the relationships url
+     * @return boolean
+     */
+    public function getRelationshipUrlOnly()
+    {
+        return $this->relationshipUrlOnly;
     }
 }

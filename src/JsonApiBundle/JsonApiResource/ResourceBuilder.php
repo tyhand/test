@@ -38,6 +38,7 @@ class ResourceBuilder
     public function startResource(Annotation\Resource $annotation)
     {
         $this->resource->setEntity($annotation->getEntity());
+        $this->resource->setAllowDelete($annotation->getAllowDelete());
 
         return $this;
     }
@@ -116,7 +117,9 @@ class ResourceBuilder
             $relation->setEntity($annotation->getEntity());
         }
 
+        $this->resource->{$property} = $relation;
         $relation->setGetIdMethod($annotation->getGetIdMethod());
+        $relation->setRelationshipUrlOnly($annotation->getRelationshipUrlOnly());
 
         return $this;
     }
@@ -170,6 +173,7 @@ class ResourceBuilder
 
         $this->resource->{$property} = $relation;
         $this->resource->addRelationship($relation);
+        $relation->setRelationshipUrlOnly($annotation->getRelationshipUrlOnly());
 
         return $this;
     }

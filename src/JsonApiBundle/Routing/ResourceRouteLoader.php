@@ -6,8 +6,25 @@ use Symfony\Component\Config\Loader\Loader;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
+use JsonApiBundle\JsonApiResource\ResourceManager;
+
 class ResourceRouteLoader extends Loader
 {
+    /**
+     * Resource Manager
+     * @var ResourceManager
+     */
+    private $manager;
+
+    /**
+     * Constructor
+     * @param ResourceManager $manager Resource Manager
+     */
+    public function __construct(ResourceManager $manager)
+    {
+        $this->manager = $manager;
+    }
+
     /**
      * @{inheritDoc}
      */
@@ -27,6 +44,12 @@ class ResourceRouteLoader extends Loader
 
         if (!$resourceName) {
             throw new \RuntimeException('Could not determine resource name for "'. $resource .'"');
+        }
+
+        // Load the api resource
+        $apiResource = $this->manager->getResource($resourceName);
+        if (!$apiResource) {
+            throw new \RuntimeException('Could not load the resource "' . $resource . '"');
         }
 
         $routes = new RouteCollection();
