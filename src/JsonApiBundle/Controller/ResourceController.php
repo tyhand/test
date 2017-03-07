@@ -24,8 +24,9 @@ class ResourceController extends Controller
     }
 
 
-    public function resourceShowRelationshipsAction(Request $request, $relationship)
+    public function resourceShowRelationshipsAction(Request $request, $id, $relationship)
     {
+        dump($relationship); die;
         $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
     }
 

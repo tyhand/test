@@ -542,6 +542,29 @@ abstract class Resource
     }
 
     /**
+     * Get relationships
+     * @return array Relationships
+     */
+    public function getRelationships()
+    {
+        return $this->relationships;
+    }
+
+    /**
+     * Get an Relationship by its json name
+     * @param  string       $jsonName Json name
+     * @return Relationship           Relationship if exists
+     */
+    public function getRelationshipByJsonName($jsonName)
+    {
+        if (array_key_exists($jsonName, $this->relationships)) {
+            return $this->relationships[$jsonName];
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Get the value of Whether the resource can be deleted
      * @return boolean
      */

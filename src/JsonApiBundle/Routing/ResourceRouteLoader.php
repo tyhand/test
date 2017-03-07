@@ -54,85 +54,58 @@ class ResourceRouteLoader extends Loader
 
         $routes = new RouteCollection();
 
-        // Index
-        $routes->add($resourceName . '_index', new Route('/' . $resourceName, ['_controller' => $resource . '::resourceIndexAction'], [], [], '', [], ['GET']));
+        // Base Routes
+        $routes->add($resourceName . '_index', $this->createRoute('/' . $resourceName, $resource . '::resourceIndexAction', [], ['GET']));
+        $routes->add($resourceName . '_show', $this->createRoute('/' . $resourceName . '/{id}', $resource . '::resourceShowAction', ['id' => '\d+'], ['GET']));
+        $routes->add($resourceName . '_create', $this->createRoute('/' . $resourceName, $resource . '::resourceCreateAction', [], ['POST']));
+        $routes->add($resourceName . '_edit', $this->createRoute('/' . $resourceName . '/{id}', $resource . '::resourceEditAction', ['id' => '\d+'], ['PATCH']));
 
-        // Show
-        $routes->add($resourceName . '_show', new Route('/' . $resourceName . '/{id}', ['_controller' => $resource . '::resourceShowAction'], ['id' => '\d+'], [], '', [], ['GET']));
+        // Add Delete if allowed
+        if ($apiResource->getAllowDelete()) {
+            $routes->add($resourceName . '_delete', $this->createRoute('/' . $resourceName . '/{id}', $resource . '::resourceDeleteAction', ['id' => '\d+'], ['DELETE']));
+        }
 
-        // New
-        $routes->add($resourceName . '_create', new Route('/' . $resourceName, ['_controller' => $resource . '::resourceCreateAction'], [], [], '', [], ['POST']));
+        foreach($apiResource->getRelationships() as $name => $relationship) {
+            $routes->add(
+                $resourceName . '_show_relationship_' . $name,
+                $this->createRoute('/' . $resourceName . '/{id}/relationships/' . $name , $resource . '::resourceShowRelationshipsAction', ['id' => '\d+'], ['GET'], ['relationship' => $name])
+            );
+            $routes->add(
+                $resourceName . '_edit_relationship_' . $name,
+                $this->createRoute('/' . $resourceName . '/{id}/relationships/' . $name , $resource . '::resourceEditRelationshipsAction', ['id' => '\d+'], ['PATCH'], ['relationship' => $name])
+            );
+            if (!$relationship->getRelationshipUrlOnly()) {
+                $routes->add(
+                    $resourceName . '_show_' . $name,
+                    $this->createRoute('/' . $resourceName . '/{id}/' . $name , $resource . '::resourceShowRelationshipsAction', ['id' => '\d+'], ['GET'], ['relationship' => $name])
+                );
+                $routes->add(
+                    $resourceName . '_edit_' . $name,
+                    $this->createRoute('/' . $resourceName . '/{id}/' . $name , $resource . '::resourceEditRelationshipsAction', ['id' => '\d+'], ['PATCH'], ['relationship' => $name])
+                );
+            }
 
-        // Edit
-        $routes->add($resourceName . '_edit', new Route('/' . $resourceName . '/{id}', ['_controller' => $resource . '::resourceEditAction'], ['id' => '\d+'], [], '', [], ['PATCH']));
-
-        // Delete
-        $routes->add($resourceName . '_delete', new Route('/' . $resourceName . '/{id}', ['_controller' => $resource . '::resourceDeleteAction'], ['id' => '\d+'], [], '', [], ['DELETE']));
-
-        // Relationships
-        $routes->add(
-            $resourceName . '_relationships',
-            new Route(
-                '/' . $resourceName . '/{id}/relationships/{relationship}',
-                ['_controller' => $resource . '::resourceShowRelationshipAction'],
-                [
-                    'id' => '\d+',
-                    'relationship' => '\w+'
-                ],
-                [],
-                '',
-                [],
-                ['GET']
-            )
-        );
-
-        $routes->add(
-            $resourceName . '_set_relationships',
-            new Route(
-                '/' . $resourceName . '/{id}/relationships/{relationship}',
-                ['_controller' => $resource . '::resourceSetRelationshipAction'],
-                [
-                    'id' => '\d+',
-                    'relationship' => '\w+'
-                ],
-                [],
-                '',
-                [],
-                ['PATCH']
-            )
-        );
-
-        $routes->add(
-            $resourceName . '_add_relationships',
-            new Route(
-                '/' . $resourceName . '/{id}/relationships/{relationship}',
-                ['_controller' => $resource . '::resourceAddRelationshipAction'],
-                [
-                    'id' => '\d+',
-                    'relationship' => '\w+'
-                ],
-                [],
-                '',
-                [],
-                ['POST']
-            )
-        );
-
-        $routes->add(
-            $resourceName . '_remove_relationships',
-            new Route(
-                '/' . $resourceName . '/{id}/relationships/{relationship}',
-                ['_controller' => $resource . '::resourceRemoveRelationshipAction'],
-                [
-                    'id' => '\d+',
-                    'relationship' => '\w+'
-                ],
-                [],
-                '',
-                [],
-                ['DELETE']
-            )
-        );
+            if ($relationship instanceof \JsonApiBundle\JsonApiResource\HasManyRelationship) {
+                $routes->add(
+                    $resourceName . '_add_relationship_' . $name,
+                    $this->createRoute('/' . $resourceName . '/{id}/relationships/' . $name , $resource . '::resourceAddRelationshipsAction', ['id' => '\d+'], ['POST'], ['relationship' => $name])
+                );
+                $routes->add(
+                    $resourceName . '_remove_relationship_' . $name,
+                    $this->createRoute('/' . $resourceName . '/{id}/relationships/' . $name , $resource . '::resourceRemoveRelationshipsAction', ['id' => '\d+'], ['DELETE'], ['relationship' => $name])
+                );
+                if (!$relationship->getRelationshipUrlOnly()) {
+                    $routes->add(
+                        $resourceName . '_add_' . $name,
+                        $this->createRoute('/' . $resourceName . '/{id}/' . $name , $resource . '::resourceAddRelationshipsAction', ['id' => '\d+'], ['POST'], ['relationship' => $name])
+                    );
+                    $routes->add(
+                        $resourceName . '_remove_' . $name,
+                        $this->createRoute('/' . $resourceName . '/{id}/' . $name , $resource . '::resourceRemoveRelationshipsAction', ['id' => '\d+'], ['DELETE'], ['relationship' => $name])
+                    );
+                }
+            }
+        }
 
         return $routes;
     }
@@ -143,5 +116,20 @@ class ResourceRouteLoader extends Loader
     public function supports($resource, $type = null)
     {
         return 'jsonapi_resource' === $type;
+    }
+
+    /**
+     * Create a route
+     * @param  string $pattern      Url pattern
+     * @param  string $controller   Controller Action
+     * @param  array  $requirements Requirements array
+     * @param  array  $methods      Method array
+     * @param  array  $defaults     Defaults
+     * @return Route                New Route
+     */
+    private function createRoute($pattern, $controller, $requirements, $methods, $defaults = [])
+    {
+        $defaults['_controller'] = $controller;
+        return new Route($pattern, $defaults, $requirements, [], '', [], $methods);
     }
 }
