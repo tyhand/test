@@ -182,7 +182,7 @@ abstract class Resource
      * @param  mixed $id Id
      * @return mixed     Entity
      */
-    protected function loadEntityById($id)
+    public function loadEntityById($id)
     {
         if ($this->isComposite()) {
             $ids = explode('-', $id);
@@ -200,7 +200,7 @@ abstract class Resource
      * Create a new entity for this resource
      * @return mixed Entity
      */
-    protected function createNewEntity()
+    public function createNewEntity()
     {
         if ($this->isComposite()) {
             $entityMap = [];

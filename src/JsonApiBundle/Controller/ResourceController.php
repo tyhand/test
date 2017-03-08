@@ -26,8 +26,12 @@ class ResourceController extends Controller
 
     public function resourceShowRelationshipsAction(Request $request, $id, $relationship)
     {
-        dump($relationship); die;
         $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
+        $entity = $resource->loadEntityById($id);
+        if (!$entity) {
+            throw new \Exception('Entity not found');
+        }
+
     }
 
     public function resourceCreateAction(Request $request)
