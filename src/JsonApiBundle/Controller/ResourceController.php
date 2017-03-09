@@ -72,19 +72,64 @@ class ResourceController extends Controller
 
     public function resourceEditRelationshipsAction(Request $request, $id, $relationship)
     {
+        $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
+        $entity = $resource->loadEntityById($id);
+        if (!$entity) {
+            throw new \Exception('Entity not found');
+        }
+        $relation = $resource->getRelationshipByJsonName($relationship);
+        if (!$relation) {
+            throw new \Exception('Relationship not found');
+        }
 
+        $entity = $relation->addToEntity($entity, json_decode($request->getContent(), true), $this->get('jsonapi.resource_manager'));
+        $this->getDoctrine()->getManager()->flush();
+
+        return new JsonResponse(['data' => $relation->getResourceIdentifierJson($entity)]);
     }
 
 
     public function resourceAddRelationshipsAction(Request $request, $id, $relationship)
     {
+        $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
+        $entity = $resource->loadEntityById($id);
+        if (!$entity) {
+            throw new \Exception('Entity not found');
+        }
+        $relation = $resource->getRelationshipByJsonName($relationship);
+        if (!$relation) {
+            throw new \Exception('Relationship not found');
+        } elseif (!($relation instanceof \JsonApiBundle\JsonApiResource\HasManyRelationship)) {
+            throw new \Exception('Method is only for Has Many Relationships');
+        }
 
+        $relation->setModeToAdd();
+        $entity = $relation->addToEntity($entity, json_decode($request->getContent(), true), $this->get('jsonapi.resource_manager'));
+        $this->getDoctrine()->getManager()->flush();
+
+        return new JsonResponse(['data' => $relation->getResourceIdentifierJson($entity)]);
     }
 
 
     public function resourceRemoveRelationshipsAction(Request $request, $id, $relationship)
     {
+        $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
+        $entity = $resource->loadEntityById($id);
+        if (!$entity) {
+            throw new \Exception('Entity not found');
+        }
+        $relation = $resource->getRelationshipByJsonName($relationship);
+        if (!$relation) {
+            throw new \Exception('Relationship not found');
+        } elseif (!($relation instanceof \JsonApiBundle\JsonApiResource\HasManyRelationship)) {
+            throw new \Exception('Method is only for Has Many Relationships');
+        }
 
+        $relation->setModeToRemove();
+        $entity = $relation->addToEntity($entity, json_decode($request->getContent(), true), $this->get('jsonapi.resource_manager'));
+        $this->getDoctrine()->getManager()->flush();
+
+        return new JsonResponse(['data' => $relation->getResourceIdentifierJson($entity)]);
     }
 
 

@@ -57,13 +57,17 @@ class HasOneRelationship extends Relationship
                 if (isset($relationData['data']['type']) && isset($relationData['data']['id'])) {
                     $identifier = new ResourceIdentifier($relationData['data']['type'], $relationData['data']['id']);
                 } else {
-                    throw new \Exception('Identifier must have a type and an id');
+                    $identifier = null;
                 }
             } else {
                 throw new \Exception('Not a has many relationship');
             }
 
-            $loadedEntity = $manager->loadEntityFromIdentifier($identifier);
+            if ($identifier) {
+                $loadedEntity = $manager->loadEntityFromIdentifier($identifier);
+            } else {
+                $loadedEntity = null;
+            }
             if ($loadedEntity) {
                 $alteredEntity->{$this->setMethod}($loadedEntity);
             }

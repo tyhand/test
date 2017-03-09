@@ -4,6 +4,11 @@ namespace JsonApiBundle\JsonApiResource;
 
 class HasManyRelationship extends Relationship
 {
+    // MODES
+    const SET_MODE = 'set';
+    const ADD_MODE = 'add';
+    const REMOVE_MODE = 'remove';
+
     /**
      * Add Method
      * @var string
@@ -15,6 +20,12 @@ class HasManyRelationship extends Relationship
      * @var string
      */
     private $removeMethod;
+
+    /**
+     * How to handle changes to relations
+     * @var string
+     */
+    private $mode = self::SET_MODE;
 
     /**
      * @{inheritDoc}
@@ -61,8 +72,10 @@ class HasManyRelationship extends Relationship
         if (array_key_exists('data', $relationData)) {
             // Since this is a full replacement, get the existing first
             $original = $alteredEntity->{'get' . ucfirst($this->getProperty())}();
-            foreach($original as $item) {
-                $alteredEntity->{$this->removeMethod}($item);
+            if (self::SET_MODE === $this->mode) {
+                foreach($original as $item) {
+                    $alteredEntity->{$this->removeMethod}($item);
+                }
             }
 
             // Check if individual reference object or array or reference objects
@@ -88,7 +101,11 @@ class HasManyRelationship extends Relationship
             foreach($identifiers as $identifier) {
                 $loadedEntity = $manager->loadEntityFromIdentifier($identifier);
                 if ($loadedEntity) {
-                    $alteredEntity->{$this->addMethod}($loadedEntity);
+                    if (self::REMOVE_MODE === $this->mode) {
+                        $alteredEntity->{$this->removeMethod}($loadedEntity);
+                    } else {
+                        $alteredEntity->{$this->addMethod}($loadedEntity);
+                    }
                 }
             }
         }
@@ -118,6 +135,36 @@ class HasManyRelationship extends Relationship
         }
 
         return $json;
+    }
+
+    /**
+     * Handles the relationships by replacement
+     * @return self
+     */
+    public function setModeToSet()
+    {
+        $this->mode = self::SET_MODE;
+        return $this;
+    }
+
+    /**
+     * Handles the relationships by adding to them
+     * @return self
+     */
+    public function setModeToAdd()
+    {
+        $this->mode = self::ADD_MODE;
+        return $this;
+    }
+
+    /**
+     * Handles the relationships by removing
+     * @return self
+     */
+    public function setModeToRemove()
+    {
+        $this->mode = self::REMOVE_MODE;
+        return $this;
     }
 
     /**
