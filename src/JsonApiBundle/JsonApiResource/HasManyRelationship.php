@@ -97,6 +97,30 @@ class HasManyRelationship extends Relationship
     }
 
     /**
+     * @{inheritDoc}
+     */
+    public function getResourceIdentifierJson($entity)
+    {
+        if (is_array($entity)) {
+            if (array_key_exists($this->getEntity(), $entity)) {
+                $objects = $entity[$this->getEntity()]->{'get' . ucfirst($this->getProperty())}();
+            }
+        } else {
+            $objects = $entity->{'get' . ucfirst($this->getProperty())}();
+        }
+
+        $json = [];
+        foreach($objects as $object) {
+            $json[] = [
+                'type' => $this->getResource(),
+                'id' => $this->getIdForRelatedEntity($object)
+            ];
+        }
+
+        return $json;
+    }
+
+    /**
      * Get the value of Add Method
      * @return string
      */

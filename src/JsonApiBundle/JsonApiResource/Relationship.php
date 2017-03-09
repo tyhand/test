@@ -73,6 +73,13 @@ abstract class Relationship
     public abstract function addToEntity($entity, array $relationData, ResourceManager $manager);
 
     /**
+     * Get the Resource Identifier Objects Hash for the relationship
+     * @param  mixed $entity Entity
+     * @return array         RIO json 
+     */
+    public abstract function getResourceIdentifierJson($entity);
+
+    /**
      * Get the id for the related entity
      * @param  mixed  $entity Entity to get id for
      * @return mixed          Id

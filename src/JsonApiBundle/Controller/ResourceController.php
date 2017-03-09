@@ -14,7 +14,6 @@ class ResourceController extends Controller
     {
         $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
         $result = $resource->find($request->query);
-
         $json = ['data' => []];
         foreach($result->getResults() as $entity) {
             $json['data'][] = $resource->toJson($entity);
@@ -24,22 +23,10 @@ class ResourceController extends Controller
     }
 
 
-    public function resourceShowRelationshipsAction(Request $request, $id, $relationship)
-    {
-        $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
-        $entity = $resource->loadEntityById($id);
-        if (!$entity) {
-            throw new \Exception('Entity not found');
-        }
-
-    }
-
     public function resourceCreateAction(Request $request)
     {
         $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
-
         $entity = $resource->toEntity(json_decode($request->getContent(), true)['data']);
-
         $this->getDoctrine()->getManager()->persist($entity);
         $this->getDoctrine()->getManager()->flush();
 
@@ -50,7 +37,6 @@ class ResourceController extends Controller
     public function resourceShowAction(Request $request, $id)
     {
         $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
-
         $entity = $this->getDoctrine()->getManager()->getRepository($resource->getEntity())->findOneById($id);
 
         return new JsonResponse($resource->toJson($entity));
@@ -60,13 +46,47 @@ class ResourceController extends Controller
     public function resourceEditAction(Request $request, $id)
     {
         $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
-
         $entity = $resource->toEntity(json_decode($request->getContent(), true)['data']);
-
         $this->getDoctrine()->getManager()->flush();
 
         return new JsonResponse($resource->toJson($entity));
     }
+
+    public function resourceShowRelationshipsAction(Request $request, $id, $relationship)
+    {
+        $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
+        $entity = $resource->loadEntityById($id);
+        if (!$entity) {
+            throw new \Exception('Entity not found');
+        }
+        $relation = $resource->getRelationshipByJsonName($relationship);
+        if (!$relation) {
+            throw new \Exception('Relationship not found');
+        }
+
+        $data = $relation->getResourceIdentifierJson($entity);
+
+        return new JsonResponse(['data' => $data]);
+    }
+
+
+    public function resourceEditRelationshipsAction(Request $request, $id, $relationship)
+    {
+
+    }
+
+
+    public function resourceAddRelationshipsAction(Request $request, $id, $relationship)
+    {
+
+    }
+
+
+    public function resourceRemoveRelationshipsAction(Request $request, $id, $relationship)
+    {
+
+    }
+
 
     /**
      * Gets the name of the resource, which is taken from the controller name by default
