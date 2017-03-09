@@ -6,6 +6,7 @@ use JsonApiBundle\Annotation\Resource;
 use JsonApiBundle\Annotation\Attribute;
 use JsonApiBundle\Annotation\HasMany;
 use JsonApiBundle\Annotation\Filter;
+use JsonApiBundle\Annotation\Validator;
 
 use JsonApiBundle\JsonApiResource\JsonApiResource;
 use JsonApiBundle\JsonApiResource\Resource as ApiResource;
@@ -41,5 +42,13 @@ class UserResource extends ApiResource
         $queryBuilder->andWhere($alias . '.username = :username');
         $queryBuilder->setParameter('username', $value);
         return $queryBuilder;
+    }
+
+    /**
+     * @Validator(errorTitle="Stupid User", errorDetail="User is too stupid to create")
+     */
+    public function stopStupidUsers($entity)
+    {
+        return $entity->getUsername() !== 'lighthart';
     }
 }

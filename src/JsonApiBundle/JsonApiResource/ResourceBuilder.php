@@ -39,6 +39,7 @@ class ResourceBuilder
     {
         $this->resource->setEntity($annotation->getEntity());
         $this->resource->setAllowDelete($annotation->getAllowDelete());
+        $this->resource->setRunSymfonyValidator($annotation->getRunSymfonyValidator());
 
         return $this;
     }

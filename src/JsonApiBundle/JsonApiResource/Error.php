@@ -42,9 +42,9 @@ class Error
     public function toJson()
     {
         return [
-            'title' => $title,
-            'detail' => $detail,
-            'code' => $code
+            'title' => $this->title,
+            'detail' => $this->detail,
+            'code' => $this->code
         ];
     }
 }

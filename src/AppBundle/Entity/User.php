@@ -39,6 +39,14 @@ class User
     private $foos;
 
     /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->foos = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+
+    /**
      * Get the value of Database Id
      * @return int
      */

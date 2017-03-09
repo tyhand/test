@@ -24,6 +24,12 @@ class Resource extends Annotation
     public $allowDelete = true;
 
     /**
+     * Run the symfony validator during the validation phase
+     * @var boolean
+     */
+    public $runSymfonyValidator = true;
+
+    /**
      * Get the backing entity (or entities seperated by comma)
      * @return string Entity (or comma seperated entities)
      */
@@ -39,5 +45,14 @@ class Resource extends Annotation
     public function getAllowDelete()
     {
         return $this->allowDelete;
+    }
+
+    /**
+     * Whether to run the symfony validator
+     * @return boolean
+     */
+    public function getRunSymfonyValidator()
+    {
+        return $this->runSymfonyValidator;
     }
 }

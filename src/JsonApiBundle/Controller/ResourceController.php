@@ -27,6 +27,12 @@ class ResourceController extends Controller
     {
         $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
         $entity = $resource->toEntity(json_decode($request->getContent(), true)['data']);
+
+        $errors = $resource->validate($entity, $this->get('validator'));
+        if (0 < count($errors)) {
+            return $this->createErrorResponse($errors);
+        }
+
         $this->getDoctrine()->getManager()->persist($entity);
         $this->getDoctrine()->getManager()->flush();
 
@@ -47,6 +53,12 @@ class ResourceController extends Controller
     {
         $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
         $entity = $resource->toEntity(json_decode($request->getContent(), true)['data']);
+
+        $errors = $resource->validate($entity, $this->get('validator'));
+        if (0 < count($errors)) {
+            return $this->createErrorResponse($errors);
+        }
+
         $this->getDoctrine()->getManager()->flush();
 
         return new JsonResponse($resource->toJson($entity));
@@ -81,8 +93,13 @@ class ResourceController extends Controller
         if (!$relation) {
             throw new \Exception('Relationship not found');
         }
-
         $entity = $relation->addToEntity($entity, json_decode($request->getContent(), true), $this->get('jsonapi.resource_manager'));
+
+        $errors = $resource->validate($entity, $this->get('validator'));
+        if (0 < count($errors)) {
+            return $this->createErrorResponse($errors);
+        }
+
         $this->getDoctrine()->getManager()->flush();
 
         return new JsonResponse(['data' => $relation->getResourceIdentifierJson($entity)]);
@@ -105,6 +122,12 @@ class ResourceController extends Controller
 
         $relation->setModeToAdd();
         $entity = $relation->addToEntity($entity, json_decode($request->getContent(), true), $this->get('jsonapi.resource_manager'));
+
+        $errors = $resource->validate($entity, $this->get('validator'));
+        if (0 < count($errors)) {
+            return $this->createErrorResponse($errors);
+        }
+
         $this->getDoctrine()->getManager()->flush();
 
         return new JsonResponse(['data' => $relation->getResourceIdentifierJson($entity)]);
@@ -127,6 +150,12 @@ class ResourceController extends Controller
 
         $relation->setModeToRemove();
         $entity = $relation->addToEntity($entity, json_decode($request->getContent(), true), $this->get('jsonapi.resource_manager'));
+
+        $errors = $resource->validate($entity, $this->get('validator'));
+        if (0 < count($errors)) {
+            return $this->createErrorResponse($errors);
+        }
+
         $this->getDoctrine()->getManager()->flush();
 
         return new JsonResponse(['data' => $relation->getResourceIdentifierJson($entity)]);
@@ -145,5 +174,19 @@ class ResourceController extends Controller
         } else {
             return null;
         }
+    }
+
+    /**
+     * Generate the error response from an array or errors
+     * @param  array        $errors Error array
+     * @return JsonResponse         Response
+     */
+    private function createErrorResponse($errors)
+    {
+        $json = [];
+        foreach($errors as $error) {
+            $json[] = $error->toJson();
+        }
+        return new JsonResponse(['errors' => $json], 422);
     }
 }

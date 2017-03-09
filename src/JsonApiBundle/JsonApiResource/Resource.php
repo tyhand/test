@@ -59,6 +59,12 @@ abstract class Resource
      */
     private $allowDelete;
 
+    /**
+     * Whether to run the symfony validator
+     * @var boolean
+     */
+    private $runSymfonyValidator;
+
     //////////
     // NAME //
     //////////
@@ -383,31 +389,69 @@ abstract class Resource
     ////////////////
 
     /**
-     * Validate the entity generated from the json input
-     * @return array Errors if any
+     * Validate
+     * @param  mixed  $entity    Entity to validate
+     * @param  mixed  $validator Symfony validator
+     * @return array             Errors if any
      */
-    public function validateEntity($entity)
+    public function validate($entity, $validator)
     {
         $errors = [];
+
+        $errors = $this->validateEntity($errors, $entity);
+
+        if ($this->getRunSymfonyValidator()) {
+            if (is_array($entity)) {
+                $validatorErrors = [];
+                foreach($entity as $part) {
+                    array_merge($validatorErrors, $validator->validate($entity));
+                }
+            } else {
+                $validatorErrors = $validator->validate($entity);
+            }
+
+            foreach($validatorErrors as $validatorError) {
+                $errors[] = new Error(
+                    $validatorError->getPropertyPath(),
+                    $validatorError->getMessage(),
+                    $validatorError->getCode()
+                );
+            }
+        }
+
+        $errors = $this->afterValidation($errors, $entity);
+
+        return $errors;
+    }
+
+    /**
+     * Validate the entity generated from the json input
+     * @param  array $errors Error array
+     * @param  mixed $entity Entity being validated
+     * @return array         Errors if any
+     */
+    public function validateEntity($errors, $entity)
+    {
         foreach($this->validators as $validator) {
             if (!$this->{$validator->getMethod()}($entity)) {
                 $errors[] = new Error(
                     $validator->getErrorTitle(),
                     $validator->getErrorDetail(),
-                    $valdiator->getErrorCode()
+                    $validator->getErrorCode()
                 );
             }
         }
-        $errors = $this->afterValidation($errors);
+
         return $errors;
     }
 
     /**
      * Stub method to perform operations on the errors after the fact
      * @param  array $errors Error objects (or empty if there are none)
+     * @param  mixed $entity Entity being validated
      * @return array         Altered errors array
      */
-    public function afterValidation($errors)
+    public function afterValidation($errors, $entity)
     {
         return $errors;
     }
@@ -581,6 +625,26 @@ abstract class Resource
     public function setAllowDelete($allowDelete)
     {
         $this->allowDelete = $allowDelete;
+        return $this;
+    }
+
+    /**
+     * Get the value of Whether to run the symfony validator
+     * @return boolean
+     */
+    public function getRunSymfonyValidator()
+    {
+        return $this->runSymfonyValidator;
+    }
+
+    /**
+     * Set the value of Whether to run the symfony validator
+     * @param boolean runSymfonyValidator
+     * @return self
+     */
+    public function setRunSymfonyValidator($runSymfonyValidator)
+    {
+        $this->runSymfonyValidator = $runSymfonyValidator;
         return $this;
     }
 }
