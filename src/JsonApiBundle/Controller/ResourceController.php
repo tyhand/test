@@ -8,6 +8,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 
 use JsonApiBundle\Util\Inflect;
 use JsonApiBundle\JsonApiResource\IncludeManager;
+use JsonApiBundle\JsonApiResource\LinkGenerator;
 
 class ResourceController extends Controller
 {
@@ -16,6 +17,7 @@ class ResourceController extends Controller
         $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
         $result = $resource->find($request->query);
         $includeManager = $this->createIncludesManager($request);
+        $linkGenerator = $this->createLinkGenerator($request);
         $json = ['data' => []];
         foreach($result->getResults() as $entity) {
             $json['data'][] = $resource->toJson($entity, $includeManager);
@@ -24,6 +26,9 @@ class ResourceController extends Controller
         if ($includeManager->hasData()) {
             $json['included'] = $includeManager->toJson();
         }
+
+        $json['links'] = $linkGenerator->generatePaginationLinks($result);
+        $json['meta'] = $result->generateMetaJson();
 
         return new JsonResponse($this->postProcessJson($request, $json));
     }
@@ -46,7 +51,9 @@ class ResourceController extends Controller
         $this->getDoctrine()->getManager()->persist($entity);
         $this->getDoctrine()->getManager()->flush();
 
-        return new JsonResponse($this->postProcessJson($request, $resource->toJson($entity)));
+        $json = $resource->toJson($entity);
+
+        return new JsonResponse($this->postProcessJson($request, $json));
     }
 
 
@@ -255,6 +262,16 @@ class ResourceController extends Controller
         } else {
             return new IncludeManager($this->get('jsonapi.resource_manager'));
         }
+    }
+
+    /**
+     * Create the link generator
+     * @param  Request       $request Request
+     * @return LinkGenerator          Link Generator
+     */
+    protected function createLinkGenerator(Request $request)
+    {
+        return new LinkGenerator($request);
     }
 
     /**

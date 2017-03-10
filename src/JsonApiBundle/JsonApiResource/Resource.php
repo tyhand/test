@@ -373,13 +373,13 @@ abstract class Resource
     public function processPagination($pageParameters, $alias, $queryBuilder, FindResult $result)
     {
         if (isset($pageParameters['number'])){
-            $number = $pageParameters['number'];
+            $number = intval($pageParameters['number']);
         } else {
             $number = 1;
         }
 
         if (isset($pageParameters['size'])) {
-            $size = $pageParameters['size'];
+            $size = intval($pageParameters['size']);
             // Enforce a limit though
             if ($size > 1000) {
                 $size = 1000;

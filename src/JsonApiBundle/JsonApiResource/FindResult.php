@@ -32,6 +32,24 @@ class FindResult
     private $pageSize;
 
     /**
+     * Output a json hash to be used for the meta portion of the response
+     * @return array Json Hash
+     */
+    public function generateMetaJson()
+    {
+        $pages = intdiv($this->count, $this->pageSize);
+        if (($this->count % $this->pageSize) > 0) {
+            $pages++;
+        }
+        return [
+            'count' => $this->count,
+            'page-size' => $this->pageSize,
+            'page-number' => $this->pageNumber,
+            'pages' => $pages
+        ];
+    }
+
+    /**
      * Get the value of Number of results before pagination
      * @return int
      */
