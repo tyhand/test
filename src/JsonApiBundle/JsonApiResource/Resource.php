@@ -65,6 +65,36 @@ abstract class Resource
      */
     private $runSymfonyValidator;
 
+    /**
+     * If true use the voters for the default controller actions
+     * @var boolean
+     */
+    private $useVoters;
+
+    /**
+     * Voter view attribute
+     * @var string
+     */
+    private $voterViewAttribute;
+
+    /**
+     * Voter create attribute
+     * @var string
+     */
+    private $voterCreateAttribute;
+
+    /**
+     * Voter edit attribute
+     * @var string
+     */
+    private $voterEditAttribute;
+
+    /**
+     * Voter delete attribute
+     * @var string
+     */
+    private $voterDeleteAttribute;
+
     //////////
     // NAME //
     //////////
@@ -242,6 +272,8 @@ abstract class Resource
 
         $joinManager = new JoinManager($alias, $this, $queryBuilder, $this->getManager());
 
+        $queryBuilder = $this->beforeFilter($queryBuilder, $alias, $joinManager);
+
         // Filters
         if ($parameters->has('filter')) {
             $queryBuilder = $this->processFilters($parameters->get('filter'), $alias, $queryBuilder, $joinManager);
@@ -263,7 +295,7 @@ abstract class Resource
         $queryBuilder = $this->processPagination($parameters->get('page', []), $alias, $queryBuilder, $result);
 
         // beforeQuery
-        $queryBuilder = $this->beforeQuery($queryBuilder);
+        $queryBuilder = $this->beforeQuery($queryBuilder, $alias, $joinManager);
 
         // run the query
         $result->setResults($queryBuilder->getQuery()->getResult());
@@ -366,11 +398,25 @@ abstract class Resource
     }
 
     /**
-     * Hook to make last minute changes to the querybuilder before the query is created
+     * Hook to make changes to the querybuilder before the filters are applied.  This is where security stuff should go.
      * @param  QueryBuilder $queryBuilder Query Builder
+     * @param  string       $alias        Alias for the query builder
+     * @param  JoinManager  $joinManager  Join Manager
      * @return QueryBuilder               Query Builder
      */
-    public function beforeQuery($queryBuilder)
+    public function beforeFilter($queryBuilder, $alias, $joinManager)
+    {
+        return $queryBuilder;
+    }
+
+    /**
+     * Hook to make last minute changes to the querybuilder before the query is created
+     * @param  QueryBuilder $queryBuilder Query Builder
+     * @param  string       $alias        Alias for the query builder
+     * @param  JoinManager  $joinManager  Join Manager
+     * @return QueryBuilder               Query Builder
+     */
+    public function beforeQuery($queryBuilder, $alias, $joinManager)
     {
         return $queryBuilder;
     }
@@ -646,6 +692,106 @@ abstract class Resource
     public function setRunSymfonyValidator($runSymfonyValidator)
     {
         $this->runSymfonyValidator = $runSymfonyValidator;
+        return $this;
+    }
+
+    /**
+     * Get the value of If true use the voters for the default controller actions
+     * @return boolean
+     */
+    public function getUseVoters()
+    {
+        return $this->useVoters;
+    }
+
+    /**
+     * Set the value of If true use the voters for the default controller actions
+     * @param boolean useVoters
+     * @return self
+     */
+    public function setUseVoters($useVoters)
+    {
+        $this->useVoters = $useVoters;
+        return $this;
+    }
+
+    /**
+     * Get the value of Voter view attribute
+     * @return string
+     */
+    public function getVoterViewAttribute()
+    {
+        return $this->voterViewAttribute;
+    }
+
+    /**
+     * Set the value of Voter view attribute
+     * @param string voterViewAttribute
+     * @return self
+     */
+    public function setVoterViewAttribute($voterViewAttribute)
+    {
+        $this->voterViewAttribute = $voterViewAttribute;
+        return $this;
+    }
+
+    /**
+     * Get the value of Voter create attribute
+     * @return string
+     */
+    public function getVoterCreateAttribute()
+    {
+        return $this->voterCreateAttribute;
+    }
+
+    /**
+     * Set the value of Voter create attribute
+     * @param string voterCreateAttribute
+     * @return self
+     */
+    public function setVoterCreateAttribute($voterCreateAttribute)
+    {
+        $this->voterCreateAttribute = $voterCreateAttribute;
+        return $this;
+    }
+
+    /**
+     * Get the value of Voter edit attribute
+     * @return string
+     */
+    public function getVoterEditAttribute()
+    {
+        return $this->voterEditAttribute;
+    }
+
+    /**
+     * Set the value of Voter edit attribute
+     * @param string voterEditAttribute
+     * @return self
+     */
+    public function setVoterEditAttribute($voterEditAttribute)
+    {
+        $this->voterEditAttribute = $voterEditAttribute;
+        return $this;
+    }
+
+    /**
+     * Get the value of Voter delete attribute
+     * @return string
+     */
+    public function getVoterDeleteAttribute()
+    {
+        return $this->voterDeleteAttribute;
+    }
+
+    /**
+     * Set the value of Voter delete attribute
+     * @param string voterDeleteAttribute
+     * @return self
+     */
+    public function setVoterDeleteAttribute($voterDeleteAttribute)
+    {
+        $this->voterDeleteAttribute = $voterDeleteAttribute;
         return $this;
     }
 }

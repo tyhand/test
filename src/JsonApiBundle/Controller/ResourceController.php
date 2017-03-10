@@ -25,7 +25,7 @@ class ResourceController extends Controller
             $json['included'] = $includeManager->toJson();
         }
 
-        return new JsonResponse($json);
+        return new JsonResponse($this->postProcessJson($request, $json));
     }
 
 
@@ -33,6 +33,10 @@ class ResourceController extends Controller
     {
         $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
         $entity = $resource->toEntity(json_decode($request->getContent(), true)['data']);
+
+        if ($resource->getUseVoters()) {
+            $this->denyAccessUnlessGranted($resource->getVoterCreateAttribute(), $entity);
+        }
 
         $errors = $resource->validate($entity, $this->get('validator'));
         if (0 < count($errors)) {
@@ -42,7 +46,7 @@ class ResourceController extends Controller
         $this->getDoctrine()->getManager()->persist($entity);
         $this->getDoctrine()->getManager()->flush();
 
-        return new JsonResponse($resource->toJson($entity));
+        return new JsonResponse($this->postProcessJson($request, $resource->toJson($entity)));
     }
 
 
@@ -51,6 +55,10 @@ class ResourceController extends Controller
         $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
         $entity = $this->getDoctrine()->getManager()->getRepository($resource->getEntity())->findOneById($id);
 
+        if ($resource->getUseVoters()) {
+            $this->denyAccessUnlessGranted($resource->getVoterViewAttribute(), $entity);
+        }
+
         $includeManager = $this->createIncludesManager($request);
         $json = ['data' => $resource->toJson($entity, $includeManager)];
 
@@ -58,7 +66,7 @@ class ResourceController extends Controller
             $json['included'] = $includeManager->toJson();
         }
 
-        return new JsonResponse($json);
+        return new JsonResponse($this->postProcessJson($request, $json));
     }
 
 
@@ -67,6 +75,10 @@ class ResourceController extends Controller
         $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
         $entity = $resource->toEntity(json_decode($request->getContent(), true)['data']);
 
+        if ($resource->getUseVoters()) {
+            $this->denyAccessUnlessGranted($resource->getVoterEditAttribute(), $entity);
+        }
+
         $errors = $resource->validate($entity, $this->get('validator'));
         if (0 < count($errors)) {
             return $this->createErrorResponse($errors);
@@ -74,7 +86,27 @@ class ResourceController extends Controller
 
         $this->getDoctrine()->getManager()->flush();
 
-        return new JsonResponse($resource->toJson($entity));
+        return new JsonResponse($this->postProcessJson($request, $resource->toJson($entity)));
+    }
+
+
+    public function resourceDeleteAction(Request $request, $id)
+    {
+        $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
+        $entity = $resource->loadEntityById($id);
+
+        if (!$resource->getAllowDelete()) {
+            throw $this->createAccessDeniedException('This operation is not allowed');
+        }
+
+        if ($resource->getUseVoters()) {
+            $this->denyAccessUnlessGranted($resource->getVoterDeleteAttribute(), $entity);
+        }
+
+        $this->getDoctrine()->getManager()->remove($entity);
+        $this->getDoctrine()->getManager()->flush();
+
+        return new JsonResponse([]);
     }
 
     public function resourceShowRelationshipsAction(Request $request, $id, $relationship)
@@ -91,7 +123,9 @@ class ResourceController extends Controller
 
         $data = $relation->getResourceIdentifierJson($entity);
 
-        return new JsonResponse(['data' => $data]);
+        $json = ['data' => $data];
+
+        return new JsonResponse($this->postProcessJson($request, $json));
     }
 
 
@@ -115,7 +149,9 @@ class ResourceController extends Controller
 
         $this->getDoctrine()->getManager()->flush();
 
-        return new JsonResponse(['data' => $relation->getResourceIdentifierJson($entity)]);
+        $json = ['data' => $relation->getResourceIdentifierJson($entity)];
+
+        return new JsonResponse($this->postProcessJson($request, $json));
     }
 
 
@@ -143,7 +179,9 @@ class ResourceController extends Controller
 
         $this->getDoctrine()->getManager()->flush();
 
-        return new JsonResponse(['data' => $relation->getResourceIdentifierJson($entity)]);
+        $json = ['data' => $relation->getResourceIdentifierJson($entity)];
+
+        return new JsonResponse($this->postProcessJson($request, $json));
     }
 
 
@@ -171,7 +209,9 @@ class ResourceController extends Controller
 
         $this->getDoctrine()->getManager()->flush();
 
-        return new JsonResponse(['data' => $relation->getResourceIdentifierJson($entity)]);
+        $json = ['data' => $relation->getResourceIdentifierJson($entity)];
+
+        return new JsonResponse($this->postProcessJson($request, $json));
     }
 
 
@@ -194,7 +234,7 @@ class ResourceController extends Controller
      * @param  array        $errors Error array
      * @return JsonResponse         Response
      */
-    private function createErrorResponse($errors)
+    protected function createErrorResponse($errors)
     {
         $json = [];
         foreach($errors as $error) {
@@ -208,12 +248,25 @@ class ResourceController extends Controller
      * @param  Request        $request Http Request
      * @return IncludeManager          Include Manager
      */
-    private function createIncludesManager(Request $request)
+    protected function createIncludesManager(Request $request)
     {
         if ($request->query->has('include')) {
             return new IncludeManager($this->get('jsonapi.resource_manager'), explode(',', $request->query->get('include')));
         } else {
             return new IncludeManager($this->get('jsonapi.resource_manager'));
         }
+    }
+
+    /**
+     * Add final touches to the json output
+     * @param  Request $request Request
+     * @param  array   $json    Json hash
+     * @return array            Altered Json hash
+     */
+    protected function postProcessJson(Request $request, $json)
+    {
+        $json['jsonapi'] = ['version' => '1.0'];
+
+        return $json;
     }
 }

@@ -40,6 +40,11 @@ class ResourceBuilder
         $this->resource->setEntity($annotation->getEntity());
         $this->resource->setAllowDelete($annotation->getAllowDelete());
         $this->resource->setRunSymfonyValidator($annotation->getRunSymfonyValidator());
+        $this->resource->setUseVoters($annotation->getUseVoters());
+        $this->resource->setVoterViewAttribute($annotation->getVoterViewAttribute());
+        $this->resource->setVoterCreateAttribute($annotation->getVoterCreateAttribute());
+        $this->resource->setVoterEditAttribute($annotation->getVoterEditAttribute());
+        $this->resource->setVoterDeleteAttribute($annotation->getVoterDeleteAttribute());
 
         return $this;
     }
