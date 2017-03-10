@@ -57,11 +57,12 @@ abstract class Relationship
 
     /**
      * Add relation to the json output
-     * @param  mixed  $entity Entity or entity collection
-     * @param  array  $json   Json hash
-     * @return array          Altered json hash
+     * @param  mixed          $entity         Entity or entity collection
+     * @param  array          $json           Json hash
+     * @param  IncludeManager $includeManager Include Manager
+     * @return array                          Altered json hash
      */
-    public abstract function addToJson($entity, array $json);
+    public abstract function addToJson($entity, array $json, IncludeManager $includeManager = null);
 
     /**
      * Add relation back to the entity
@@ -75,7 +76,7 @@ abstract class Relationship
     /**
      * Get the Resource Identifier Objects Hash for the relationship
      * @param  mixed $entity Entity
-     * @return array         RIO json 
+     * @return array         RIO json
      */
     public abstract function getResourceIdentifierJson($entity);
 

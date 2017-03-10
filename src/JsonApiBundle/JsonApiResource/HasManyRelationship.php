@@ -30,7 +30,7 @@ class HasManyRelationship extends Relationship
     /**
      * @{inheritDoc}
      */
-    public function addToJson($entity, array $json)
+    public function addToJson($entity, array $json, IncludeManager $includeManager = null)
     {
         if (is_array($entity)) {
             if (array_key_exists($this->getEntity(), $entity)) {
@@ -40,16 +40,19 @@ class HasManyRelationship extends Relationship
             $objects = $entity->{'get' . ucfirst($this->getProperty())}();
         }
 
-        $relationJson = ['data' => []];
-        foreach($objects as $object) {
-            $relationJson['data'][] = [
-                'type' => $this->getResource(),
-                'id' => $this->getIdForRelatedEntity($object)
-            ];
+        if (null !== $objects) {
+            $relationJson = ['data' => []];
+            foreach($objects as $object) {
+                $identifier = new ResourceIdentifier($this->getResource(), $this->getIdForRelatedEntity($object));
+                if (null !== $includeManager) {
+                    $includeManager->addResourceIdentifier($this->getName(), $identifier);
+                }
+
+                $relationJson['data'][] = $identifier->toJson();
+            }
+            $json['relationships'][$this->getJsonName()] = $relationJson;
         }
 
-
-        $json['relationships'][$this->getJsonName()] = $relationJson;
         return $json;
     }
 

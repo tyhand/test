@@ -89,10 +89,11 @@ abstract class Resource
 
     /**
      * Convert the given entity to json
-     * @param  mixed $entity Entity or entities to convert
-     * @return array         Hash for conversion to json
+     * @param  mixed          $entity         Entity or entities to convert
+     * @param  IncludeManager $includeManager Include Manager
+     * @return array                          Hash for conversion to json
      */
-    public function toJson($entity)
+    public function toJson($entity, IncludeManager $includeManager = null)
     {
         $json = [
             'type' => $this->getName(),
@@ -113,7 +114,7 @@ abstract class Resource
         }
 
         foreach($this->getRelationships() as $relationship) {
-            $json = $relationship->addToJson($entity, $json);
+            $json = $relationship->addToJson($entity, $json, $includeManager);
         }
 
         return $json;

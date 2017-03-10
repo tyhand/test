@@ -49,6 +49,6 @@ class UserResource extends ApiResource
      */
     public function stopStupidUsers($entity)
     {
-        return $entity->getUsername() !== 'lighthart';
+        return $entity->getUsername() !== 'trump';
     }
 }

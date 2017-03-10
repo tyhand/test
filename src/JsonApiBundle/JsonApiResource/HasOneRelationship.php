@@ -7,7 +7,7 @@ class HasOneRelationship extends Relationship
     /**
      * @{inheritDoc}
      */
-    public function addToJson($entity, array $json)
+    public function addToJson($entity, array $json, IncludeManager $includeManager = null)
     {
         if (is_array($entity)) {
             if (array_key_exists($this->getEntity(), $entity)) {
@@ -17,15 +17,12 @@ class HasOneRelationship extends Relationship
             $object = $entity->{'get' . ucfirst($this->getProperty())}();
         }
 
-        $relationJson = ['data' =>
-            [
-                'type' => $this->getResource(),
-                'id' => $this->getIdForRelatedEntity($object)
-            ]
-        ];
+        $identifier = new ResourceIdentifier($this->getResource(), $this->getIdForRelatedEntity($object));
+        if (null !== $includeManager) {
+            $includeManager->addResourceIdentifier($this->getName(), $identifier);
+        }
 
-
-        $json['relationships'][$this->getJsonName()] = $relationJson;
+        $json['relationships'][$this->getJsonName()] = ['data' => $identifier->toJson()];
         return $json;
     }
 

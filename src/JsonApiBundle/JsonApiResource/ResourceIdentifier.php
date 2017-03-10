@@ -28,6 +28,18 @@ class ResourceIdentifier
     }
 
     /**
+     * Returns the json hash representation of this object
+     * @return array Json hash
+     */
+    public function toJson()
+    {
+        return [
+            'type' => $this->type,
+            'id' => $this->id
+        ];
+    }
+
+    /**
      * Get the value of Type
      * @return string
      */

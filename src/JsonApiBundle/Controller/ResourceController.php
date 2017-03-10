@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 
 use JsonApiBundle\Util\Inflect;
+use JsonApiBundle\JsonApiResource\IncludeManager;
 
 class ResourceController extends Controller
 {
@@ -14,9 +15,14 @@ class ResourceController extends Controller
     {
         $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
         $result = $resource->find($request->query);
+        $includeManager = $this->createIncludesManager($request);
         $json = ['data' => []];
         foreach($result->getResults() as $entity) {
-            $json['data'][] = $resource->toJson($entity);
+            $json['data'][] = $resource->toJson($entity, $includeManager);
+        }
+
+        if ($includeManager->hasData()) {
+            $json['included'] = $includeManager->toJson();
         }
 
         return new JsonResponse($json);
@@ -45,7 +51,14 @@ class ResourceController extends Controller
         $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
         $entity = $this->getDoctrine()->getManager()->getRepository($resource->getEntity())->findOneById($id);
 
-        return new JsonResponse($resource->toJson($entity));
+        $includeManager = $this->createIncludesManager($request);
+        $json = ['data' => $resource->toJson($entity, $includeManager)];
+
+        if ($includeManager->hasData()) {
+            $json['included'] = $includeManager->toJson();
+        }
+
+        return new JsonResponse($json);
     }
 
 
@@ -188,5 +201,19 @@ class ResourceController extends Controller
             $json[] = $error->toJson();
         }
         return new JsonResponse(['errors' => $json], 422);
+    }
+
+    /**
+     * Creates the includes manager
+     * @param  Request        $request Http Request
+     * @return IncludeManager          Include Manager
+     */
+    private function createIncludesManager(Request $request)
+    {
+        if ($request->query->has('include')) {
+            return new IncludeManager($this->get('jsonapi.resource_manager'), explode(',', $request->query->get('include')));
+        } else {
+            return new IncludeManager($this->get('jsonapi.resource_manager'));
+        }
     }
 }
