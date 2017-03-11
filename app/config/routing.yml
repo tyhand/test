@@ -9,3 +9,11 @@ jsonapi_user:
 jsonapi_foo:
     resource: AppBundle\Controller\FooController
     type:     jsonapi_resource
+
+jsonapi_author:
+    resource: AppBundle\Controller\AuthorController
+    type:     jsonapi_resource
+
+jsonapi_book:
+    resource: AppBundle\Controller\BookController
+    type:     jsonapi_resource

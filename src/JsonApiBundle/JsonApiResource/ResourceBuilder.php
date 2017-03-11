@@ -104,7 +104,7 @@ class ResourceBuilder
         if ($annotation->getResource()) {
             $relation->setResource($annotation->getResource());
         } else {
-            $relation->setResource($property);
+            $relation->setResource(Inflect::pluralize($property));
         }
 
         if ($annotation->getJsonName()) {
@@ -123,9 +123,11 @@ class ResourceBuilder
             $relation->setEntity($annotation->getEntity());
         }
 
-        $this->resource->{$property} = $relation;
         $relation->setGetIdMethod($annotation->getGetIdMethod());
         $relation->setRelationshipUrlOnly($annotation->getRelationshipUrlOnly());
+
+        $this->resource->{$property} = $relation;
+        $this->resource->addRelationship($relation);
 
         return $this;
     }

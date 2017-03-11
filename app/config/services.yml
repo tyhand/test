@@ -12,3 +12,11 @@ services:
         class: AppBundle\JsonApiResource\FooResource
         tags:
             - { name: jsonapi.resource }
+    author_resource:
+        class: AppBundle\JsonApiResource\AuthorResource
+        tags:
+            - { name: jsonapi.resource }
+    book_resource:
+        class: AppBundle\JsonApiResource\BookResource
+        tags:
+            - { name: jsonapi.resource }
