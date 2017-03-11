@@ -17,12 +17,16 @@ class HasOneRelationship extends Relationship
             $object = $entity->{'get' . ucfirst($this->getProperty())}();
         }
 
-        $identifier = new ResourceIdentifier($this->getResource(), $this->getIdForRelatedEntity($object));
-        if (null !== $includeManager) {
-            $includeManager->addResourceIdentifier($this->getName(), $identifier);
-        }
+        if (null !== $object) {
+            $identifier = new ResourceIdentifier($this->getResource(), $this->getIdForRelatedEntity($object));
+            if (null !== $includeManager) {
+                $includeManager->addResourceIdentifier($this->getName(), $identifier);
+            }
 
-        $json['relationships'][$this->getJsonName()] = ['data' => $identifier->toJson()];
+            $json['relationships'][$this->getJsonName()] = ['data' => $identifier->toJson()];
+        } else {
+            $json['relationships'][$this->getJsonName()] = ['data' => null];
+        }
         return $json;
     }
 
