@@ -2,6 +2,8 @@
 
 namespace JsonApiBundle\JsonApiResource;
 
+use JsonApiBundle\Util\Inflect;
+
 /**
  * Simple util to help manage joins added to a query builder
  */
@@ -59,10 +61,11 @@ class JoinManager
 
     /**
      * Extract attribute and process the required joins
-     * @param  string    $name Full name from the root resource
-     * @return Attribute       Attribute
+     * @param  string    $name  Full name from the root resource
+     * @param  boolean   $outer Perform an outer join instead of an inner
+     * @return Attribute        Attribute
      */
-    public function extractAttribute($name)
+    public function extractAttribute($name, $outer = false)
     {
         $parts = explode('.', $name);
         $resourceName = [];
@@ -71,7 +74,7 @@ class JoinManager
         }
 
         $aliasChain = implode('.', $resourceName);
-        $resource = $this->joinResource($aliasChain);
+        $resource = $this->joinResource($aliasChain, $outer);
         $attribute = $resource->getAttributeByJsonName($parts[count($parts) - 1]);
 
         return new AttributeExtract($attribute, $aliasChain);
@@ -79,10 +82,11 @@ class JoinManager
 
     /**
      * Join a resource
-     * @param  string   $name Name from root e.g. if bar is the root, and has foo as a relation this would just be foo.  If foo also has a relation called buzz then it will be foo.buzz
-     * @return Resource       Resource
+     * @param  string   $name  Name from root e.g. if bar is the root, and has foo as a relation this would just be foo.  If foo also has a relation called buzz then it will be foo.buzz
+     * @param  boolean  $outer Perform an outer join instead of an inner
+     * @return Resource        Resource
      */
-    public function joinResource($name)
+    public function joinResource($name, $outer = false)
     {
         $parts = explode('.', $name);
         $currentName = [];
@@ -99,9 +103,18 @@ class JoinManager
                 if (!$relation) {
                     throw new \Exception('Relation not found');
                 }
-                $resource = $this->manager->getResource($relation->getName());
 
-                $this->queryBuilder->join($parentAlias . '.' . $relation->getProperty(), $part);
+                if ($relation instanceof HasOneRelationship) {
+                    $resource = $this->manager->getResource(Inflect::pluralize($relation->getName()));
+                } else {
+                    $resource = $this->manager->getResource($relation->getName());
+                }
+
+                if ($outer) {
+                    $this->queryBuilder->leftJoin($parentAlias . '.' . $relation->getProperty(), $part);
+                } else {
+                    $this->queryBuilder->join($parentAlias . '.' . $relation->getProperty(), $part);
+                }
 
                 $this->resources[implode('.', $currentName)] = $resource;
                 $mapPointer[$part] = [];

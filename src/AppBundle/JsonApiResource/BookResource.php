@@ -8,13 +8,12 @@ use JsonApiBundle\Annotation\HasOne;
 use JsonApiBundle\Annotation\Filter;
 use JsonApiBundle\Annotation\Validator;
 
-use JsonApiBundle\JsonApiResource\JsonApiResource;
-use JsonApiBundle\JsonApiResource\Resource as ApiResource;
+use JsonApiBundle\Extra\SearchableResource;
 
 /**
  * @Resource(entity="AppBundle\Entity\Book")
  */
-class BookResource extends ApiResource
+class BookResource extends SearchableResource
 {
     /**
      * @Attribute
@@ -34,10 +33,22 @@ class BookResource extends ApiResource
     /**
      * @Filter(name="genre")
      */
-    public function searchFilter($value, $alias, $queryBuilder, $joins)
+    public function genreFilter($value, $alias, $queryBuilder, $joins)
     {
         $queryBuilder->andWhere($alias . '.genre = :genre');
         $queryBuilder->setParameter('genre', $value);
         return $queryBuilder;
+    }
+
+    /**
+     * @{inheritDoc}
+     */
+    protected function getSearchableEntityFields()
+    {
+        return [
+            'genre',
+            'title',
+            ['property' => 'author.name', 'joinType' => 'outer']
+        ];
     }
 }
