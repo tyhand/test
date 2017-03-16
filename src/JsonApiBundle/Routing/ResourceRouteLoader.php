@@ -77,11 +77,7 @@ class ResourceRouteLoader extends Loader
             if (!$relationship->getRelationshipUrlOnly()) {
                 $routes->add(
                     $resourceName . '_show_' . $name,
-                    $this->createRoute('/' . $resourceName . '/{id}/' . $name , $resource . '::resourceShowRelationshipsAction', ['id' => '\d+'], ['GET'], ['relationship' => $name])
-                );
-                $routes->add(
-                    $resourceName . '_edit_' . $name,
-                    $this->createRoute('/' . $resourceName . '/{id}/' . $name , $resource . '::resourceEditRelationshipsAction', ['id' => '\d+'], ['PATCH'], ['relationship' => $name])
+                    $this->createRoute('/' . $resourceName . '/{id}/' . $name , $resource . '::resourceShowRelationshipsFullAction', ['id' => '\d+'], ['GET'], ['relationship' => $name])
                 );
             }
 
@@ -94,16 +90,6 @@ class ResourceRouteLoader extends Loader
                     $resourceName . '_remove_relationship_' . $name,
                     $this->createRoute('/' . $resourceName . '/{id}/relationships/' . $name , $resource . '::resourceRemoveRelationshipsAction', ['id' => '\d+'], ['DELETE'], ['relationship' => $name])
                 );
-                if (!$relationship->getRelationshipUrlOnly()) {
-                    $routes->add(
-                        $resourceName . '_add_' . $name,
-                        $this->createRoute('/' . $resourceName . '/{id}/' . $name , $resource . '::resourceAddRelationshipsAction', ['id' => '\d+'], ['POST'], ['relationship' => $name])
-                    );
-                    $routes->add(
-                        $resourceName . '_remove_' . $name,
-                        $this->createRoute('/' . $resourceName . '/{id}/' . $name , $resource . '::resourceRemoveRelationshipsAction', ['id' => '\d+'], ['DELETE'], ['relationship' => $name])
-                    );
-                }
             }
         }
 

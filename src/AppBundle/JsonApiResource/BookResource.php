@@ -31,16 +31,6 @@ class BookResource extends SearchableResource
     public $author;
 
     /**
-     * @Filter(name="genre")
-     */
-    public function genreFilter($value, $alias, $queryBuilder, $joins)
-    {
-        $queryBuilder->andWhere($alias . '.genre = :genre');
-        $queryBuilder->setParameter('genre', $value);
-        return $queryBuilder;
-    }
-
-    /**
      * @{inheritDoc}
      */
     protected function getSearchableEntityFields()

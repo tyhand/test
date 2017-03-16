@@ -56,7 +56,6 @@ class ResourceController extends Controller
         return new JsonResponse($this->postProcessJson($request, $json));
     }
 
-
     public function resourceShowAction(Request $request, $id)
     {
         $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
@@ -75,7 +74,6 @@ class ResourceController extends Controller
 
         return new JsonResponse($this->postProcessJson($request, $json));
     }
-
 
     public function resourceEditAction(Request $request, $id)
     {
@@ -128,6 +126,10 @@ class ResourceController extends Controller
             throw new \Exception('Relationship not found');
         }
 
+        if ($resource->getUseVoters()) {
+            $this->denyAccessUnlessGranted($resource->getVoterViewAttribute(), $entity);
+        }
+
         $data = $relation->getResourceIdentifierJson($entity);
 
         $json = ['data' => $data];
@@ -135,6 +137,41 @@ class ResourceController extends Controller
         return new JsonResponse($this->postProcessJson($request, $json));
     }
 
+    public function resourceShowRelationshipsFullAction(Request $request, $id, $relationship)
+    {
+        $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
+        $entity = $resource->loadEntityById($id);
+        if (!$entity) {
+            throw new \Exception('Entity not found');
+        }
+        $relation = $resource->getRelationshipByJsonName($relationship);
+        if (!$relation) {
+            throw new \Exception('Relationship not found');
+        }
+
+        if ($resource->getUseVoters()) {
+            $this->denyAccessUnlessGranted($resource->getVoterViewAttribute(), $entity);
+        }
+
+        $object = $relation->getRelatedFromEntity($entity);
+        $relatedResource = $this->get('jsonapi.resource_manager')->getResource($relation->getResource());
+        $includeManager = $this->createIncludesManager($request);
+
+        if (is_array($object) || $object instanceof \Doctrine\Common\Collections\Collection) {
+            $json = ['data' => []];
+            foreach($object as $part) {
+                $json['data'][] = $relatedResource->toJson($part, $includeManager);
+            }
+        } else {
+            $json = ['data' => $relatedResource->toJson($object, $includeManager)];
+        }
+
+        if ($includeManager->hasData()) {
+            $json['included'] = $includeManager->toJson();
+        }
+
+        return new JsonResponse($this->postProcessJson($request, $json));
+    }
 
     public function resourceEditRelationshipsAction(Request $request, $id, $relationship)
     {
@@ -147,6 +184,11 @@ class ResourceController extends Controller
         if (!$relation) {
             throw new \Exception('Relationship not found');
         }
+
+        if ($resource->getUseVoters()) {
+            $this->denyAccessUnlessGranted($resource->getVoterEditAttribute(), $entity);
+        }
+
         $entity = $relation->addToEntity($entity, json_decode($request->getContent(), true), $this->get('jsonapi.resource_manager'));
 
         $errors = $resource->validate($entity, $this->get('validator'));
@@ -176,6 +218,10 @@ class ResourceController extends Controller
             throw new \Exception('Method is only for Has Many Relationships');
         }
 
+        if ($resource->getUseVoters()) {
+            $this->denyAccessUnlessGranted($resource->getVoterEditAttribute(), $entity);
+        }
+
         $relation->setModeToAdd();
         $entity = $relation->addToEntity($entity, json_decode($request->getContent(), true), $this->get('jsonapi.resource_manager'));
 
@@ -191,7 +237,6 @@ class ResourceController extends Controller
         return new JsonResponse($this->postProcessJson($request, $json));
     }
 
-
     public function resourceRemoveRelationshipsAction(Request $request, $id, $relationship)
     {
         $resource = $this->get('jsonapi.resource_manager')->getResource($this->getResourceName());
@@ -204,6 +249,10 @@ class ResourceController extends Controller
             throw new \Exception('Relationship not found');
         } elseif (!($relation instanceof \JsonApiBundle\JsonApiResource\HasManyRelationship)) {
             throw new \Exception('Method is only for Has Many Relationships');
+        }
+
+        if ($resource->getUseVoters()) {
+            $this->denyAccessUnlessGranted($resource->getVoterEditAttribute(), $entity);
         }
 
         $relation->setModeToRemove();

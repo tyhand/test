@@ -81,6 +81,21 @@ abstract class Relationship
     public abstract function getResourceIdentifierJson($entity);
 
     /**
+     * Get the related objects from the entity for this resource
+     * @param  mixed  $entity Entity for this relations resoruce
+     * @return mixed          Entity or collection
+     */
+    public function getRelatedFromEntity($entity) {
+        if (is_array($entity)) {
+            if (array_key_exists($this->getEntity(), $entity)) {
+                return $entity[$this->getEntity()]->{'get' . ucfirst($this->getProperty())}();
+            }
+        } else {
+            return $entity->{'get' . ucfirst($this->getProperty())}();
+        }
+    }
+
+    /**
      * Get the id for the related entity
      * @param  mixed  $entity Entity to get id for
      * @return mixed          Id
